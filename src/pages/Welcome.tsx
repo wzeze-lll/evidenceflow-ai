@@ -57,7 +57,7 @@ export function Welcome() {
       await db.activityLogs.bulkPut(demoActivityLogs);
     }
     await loadDashboard();
-    navigate("/");
+    navigate("/dashboard");
   };
 
   return (

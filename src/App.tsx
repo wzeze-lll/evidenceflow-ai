@@ -1,6 +1,6 @@
 import { HashRouter, Routes, Route } from "react-router-dom";
 import { useEffect, Suspense, lazy } from "react";
-import { AppLayout, FullPageLayout } from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/layout/AppLayout";
 import { useSettingsStore } from "@/stores/settings-store";
 
 // Eager-loaded pages (always needed)
@@ -30,21 +30,10 @@ function PageLoader() {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Full page layout (no sidebar) */}
-      <Route element={<FullPageLayout />}>
-        <Route
-          path="/welcome"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <Welcome />
-            </Suspense>
-          }
-        />
-      </Route>
-
       {/* App layout with sidebar */}
       <Route element={<AppLayout />}>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<Welcome />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route
           path="/documents"
           element={

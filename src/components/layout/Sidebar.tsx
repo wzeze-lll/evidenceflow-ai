@@ -17,14 +17,14 @@ import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/app-store";
 
 const NAV_ITEMS = [
-  { to: "/", icon: LayoutDashboard, label: "工作台", end: true },
+  { to: "/dashboard", icon: LayoutDashboard, label: "工作台" },
   { to: "/documents", icon: FolderOpen, label: "文档库" },
   { to: "/reader", icon: MessageSquareText, label: "AI 阅读" },
   { to: "/evidence", icon: Link2, label: "证据链" },
   { to: "/conflicts", icon: AlertTriangle, label: "冲突雷达" },
   { to: "/consensus", icon: GitCompare, label: "共识地图" },
   { to: "/brief", icon: FileText, label: "决策简报" },
-];
+] as const;
 
 export function Sidebar() {
   const { sidebarOpen, toggleSidebar } = useAppStore();
@@ -80,14 +80,11 @@ export function Sidebar() {
           {/* Navigation */}
           <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
             {NAV_ITEMS.map((item) => {
-              const isActive = item.end
-                ? location.pathname === item.to
-                : location.pathname.startsWith(item.to);
+              const isActive = location.pathname.startsWith(item.to);
               return (
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  end={item.end}
                   className={cn(
                     "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
                     isActive
