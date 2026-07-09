@@ -11,6 +11,7 @@ import {
   ExternalLink,
   AlertCircle,
   Plus,
+  Trash2,
 } from "lucide-react";
 import { db } from "@/db/database";
 import { getAIProvider } from "@/services/ai/provider";
@@ -267,19 +268,32 @@ export function DecisionBrief() {
             <h3 className="text-sm font-semibold mb-2">已保存简报（{briefs.length}）</h3>
             <div className="space-y-1">
               {briefs.map((brief) => (
-                <button
-                  key={brief.id}
-                  onClick={() => setActiveBrief(brief)}
-                  className={cn(
-                    "w-full text-left px-3 py-2 rounded-md text-sm transition-colors",
-                    activeBrief?.id === brief.id
-                      ? "bg-accent text-accent-foreground font-medium"
-                      : "hover:bg-muted text-muted-foreground"
-                  )}
-                >
-                  <div className="truncate">{brief.title}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{formatDate(brief.createdAt)}</div>
-                </button>
+                <div key={brief.id} className="flex items-center group">
+                  <button
+                    onClick={() => setActiveBrief(brief)}
+                    className={cn(
+                      "flex-1 text-left px-3 py-2 rounded-md text-sm transition-colors truncate",
+                      activeBrief?.id === brief.id
+                        ? "bg-accent text-accent-foreground font-medium"
+                        : "hover:bg-muted text-muted-foreground"
+                    )}
+                  >
+                    <div className="truncate">{brief.title}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{formatDate(brief.createdAt)}</div>
+                  </button>
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      await db.briefs.delete(brief.id);
+                      setBriefs(prev => prev.filter(b => b.id !== brief.id));
+                      if (activeBrief?.id === brief.id) setActiveBrief(null);
+                    }}
+                    className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive shrink-0"
+                    title="删除"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
               ))}
               {briefs.length === 0 && (
                 <p className="text-xs text-muted-foreground px-3 py-2">尚未生成简报</p>
