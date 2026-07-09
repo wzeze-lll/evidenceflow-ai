@@ -55,17 +55,26 @@ import {
 
 const AI_PROVIDERS = [
   { value: "mock", label: "模拟演示（无需 Key）" },
-  { value: "deepseek", label: "DeepSeek（推荐）" },
-  { value: "openai", label: "OpenAI" },
-  { value: "groq", label: "Groq（免费额度）" },
+  { value: "deepseek", label: "DeepSeek 深度求索" },
+  { value: "openai", label: "OpenAI (GPT-4o)" },
+  { value: "claude", label: "Claude API (Anthropic)" },
   { value: "gemini", label: "Google Gemini" },
+  { value: "groq", label: "Groq（免费额度）" },
   { value: "mistral", label: "Mistral AI" },
   { value: "together", label: "Together AI" },
-  { value: "qwen", label: "通义千问（阿里）" },
+  { value: "openrouter", label: "OpenRouter（聚合平台）" },
+  { value: "siliconflow", label: "硅基流动 SiliconFlow" },
+  { value: "qwen", label: "通义千问 / 百炼（阿里）" },
   { value: "glm", label: "智谱 GLM" },
   { value: "moonshot", label: "月之暗面 Kimi" },
-  { value: "siliconflow", label: "硅基流动" },
-  { value: "custom", label: "自定义接口" },
+  { value: "doubao", label: "豆包 / 火山引擎（字节）" },
+  { value: "minimax", label: "MiniMax 海螺" },
+  { value: "stepfun", label: "阶跃星辰 StepFun" },
+  { value: "modelscope", label: "ModelScope 魔搭" },
+  { value: "baidu", label: "百度千帆" },
+  { value: "nvidia", label: "NVIDIA NIM" },
+  { value: "github", label: "GitHub Copilot / Azure" },
+  { value: "custom", label: "自定义接口（填地址即可）" },
 ] as const;
 
 const THEME_OPTIONS = [

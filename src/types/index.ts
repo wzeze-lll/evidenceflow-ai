@@ -184,7 +184,7 @@ export interface KnowledgeCard {
 // ---- User Settings ----
 export interface UserSettings {
   theme: "light" | "dark" | "system";
-  aiProvider: "mock" | "openai" | "deepseek" | "groq" | "gemini" | "mistral" | "together" | "qwen" | "glm" | "moonshot" | "siliconflow" | "custom";
+  aiProvider: "mock" | "openai" | "deepseek" | "claude" | "gemini" | "groq" | "mistral" | "together" | "openrouter" | "siliconflow" | "qwen" | "glm" | "moonshot" | "doubao" | "minimax" | "stepfun" | "modelscope" | "baidu" | "nvidia" | "github" | "custom";
   aiApiKey: string;
   aiBaseUrl: string;
   aiModel: string;
