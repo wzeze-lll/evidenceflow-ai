@@ -11,6 +11,7 @@ export function EvidenceDrawer() {
   const { evidenceDrawerOpen, closeEvidenceDrawer, evidenceDrawerData } = useAppStore();
   const [evidences, setEvidences] = useState<Evidence[]>([]);
   const [loading, setLoading] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -71,20 +72,23 @@ export function EvidenceDrawer() {
                 </div>
               ) : evidences.length > 0 ? (
                 evidences.map((evi) => (
-                  <div key={evi.id} className="p-4 rounded-lg border border-border bg-background hover:border-primary/30 transition-colors cursor-pointer"
-                    onClick={() => { closeEvidenceDrawer(); navigate(`/reader?doc=${evi.documentId}`); }}>
+                  <div key={evi.id}
+                    className="p-4 rounded-lg border border-border bg-background hover:border-primary/30 transition-colors cursor-pointer"
+                    onClick={() => setExpandedId(expandedId === evi.id ? null : evi.id)}>
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="flex items-center gap-2 min-w-0">
                         <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
                         <span className="text-sm font-medium truncate">{evi.documentName}</span>
                       </div>
-                      <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full ${getRelationColor(evi.relation)}`}>
-                        {getRelationLabel(evi.relation)}
-                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${getRelationColor(evi.relation)}`}>
+                          {getRelationLabel(evi.relation)}
+                        </span>
+                      </div>
                     </div>
 
                     <blockquote className="text-sm text-muted-foreground border-l-2 border-primary/30 pl-3 py-1 mb-3 italic">
-                      "{evi.text.slice(0, 300)}{evi.text.length > 300 ? '...' : ''}"
+                      "{expandedId === evi.id ? evi.text : (evi.text.length > 200 ? evi.text.slice(0, 200) + '...' : evi.text)}"
                     </blockquote>
 
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -102,11 +106,20 @@ export function EvidenceDrawer() {
                           </span>
                         )}
                       </div>
-                      <span className="flex items-center gap-1 text-primary font-medium">
-                        <ExternalLink className="w-3 h-3" />
-                        在阅读器中打开
+                      <span className="text-primary text-xs">
+                        {expandedId === evi.id ? '收起' : '展开查看全文'}
                       </span>
                     </div>
+
+                    {expandedId === evi.id && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); closeEvidenceDrawer(); navigate(`/reader?doc=${evi.documentId}`); }}
+                        className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-primary/10 text-primary text-xs hover:bg-primary/20 transition-colors"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        在阅读器中打开此文档
+                      </button>
+                    )}
                   </div>
                 ))
               ) : (
