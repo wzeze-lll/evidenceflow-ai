@@ -1,0 +1,49 @@
+graph TB
+    subgraph Browser["Browser (Client)"]
+        UI["React UI Layer"]
+        Router["React Router"]
+        Store["Zustand State Management"]
+        DB["IndexedDB (Dexie.js)"]
+        Parser["Document Parser\n(PDF.js, Mammoth, Markdown)"]
+        Retrieval["Keyword Retrieval\n(TF-IDF / BM25)"]
+    end
+
+    subgraph Services["Service Layer"]
+        DocService["Document Service"]
+        AIService["AI Provider Adapter"]
+        CitationService["Citation Mapper"]
+        AnalysisService["Analysis Service\n(Conflict/Consensus/Brief)"]
+    end
+
+    subgraph Providers["AI Providers"]
+        Mock["Mock Provider\n(Always Available)"]
+        OpenAI["OpenAI Compatible"]
+        DeepSeek["DeepSeek Compatible"]
+        Custom["Custom Provider"]
+    end
+
+    subgraph External["External (Optional)"]
+        RemoteAI["Remote AI API\n(Only text chunks sent)"]
+    end
+
+    UI --> Router
+    UI --> Store
+    Store --> DB
+    UI --> DocService
+    DocService --> Parser
+    DocService --> DB
+    UI --> AIService
+    AIService --> Mock
+    AIService --> OpenAI
+    AIService --> DeepSeek
+    AIService --> Custom
+    OpenAI --> RemoteAI
+    DeepSeek --> RemoteAI
+    Custom --> RemoteAI
+    UI --> Retrieval
+    Retrieval --> DB
+    UI --> CitationService
+    CitationService --> DB
+    UI --> AnalysisService
+    AnalysisService --> AIService
+    AnalysisService --> DB

@@ -1,0 +1,21 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Direct Upload Test</title></head><body>
+<h2>直接上传测试</h2>
+<input type="file" id="f" accept=".txt,.md">
+<pre id="log" style="background:#111;color:#0f0;padding:10px;min-height:200px;"></pre>
+<script>
+const log = (msg) => document.getElementById('log').textContent += msg + '\n';
+document.getElementById('f').onchange = async (e) => {
+  log('=== 开始 ===');
+  const file = e.target.files[0];
+  log('文件: ' + file.name + ' (' + file.size + ' bytes)');
+  try {
+    log('读取中...');
+    const text = await file.text();
+    log('读取成功! ' + text.length + ' 字符');
+    log('内容预览: ' + text.slice(0, 200));
+  } catch(err) {
+    log('错误: ' + err.message);
+  }
+  log('=== 完成 ===');
+};
+</script></body></html>
