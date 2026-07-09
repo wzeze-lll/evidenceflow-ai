@@ -71,7 +71,7 @@ export function DecisionBrief() {
     }
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = () => {
     if (!formData.title.trim()) {
       setError("请输入简报标题。");
       return;
@@ -84,46 +84,32 @@ export function DecisionBrief() {
     setGenerating(true);
     setError(null);
 
-    try {
-      const selectedDocs = documents.filter((d) => formData.documentIds.includes(d.id));
-      // Collect chunks from ALL selected documents
-      const chunks: DocumentChunk[] = [];
-      for (const docId of formData.documentIds) {
-        const chs = await db.chunks.where("documentId").equals(docId).toArray();
-        chunks.push(...chs);
+    // Fire and forget - user can navigate away while generating
+    const selectedDocs = documents.filter((d) => formData.documentIds.includes(d.id));
+    (async () => {
+      try {
+        const chunks: DocumentChunk[] = [];
+        for (const docId of formData.documentIds) {
+          const chs = await db.chunks.where("documentId").equals(docId).toArray();
+          chunks.push(...chs);
+        }
+
+        const provider = getAIProvider();
+        const brief = await provider.generateDecisionBrief(
+          { projectId: generateId(), title: formData.title, target: formData.target, audience: formData.audience, detail: formData.detail },
+          selectedDocs,
+          chunks
+        );
+
+        await db.briefs.put(brief);
+        setBriefs((prev) => [brief, ...prev]);
+        setActiveBrief(brief);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "生成简报失败");
+      } finally {
+        setGenerating(false);
       }
-
-      const provider = getAIProvider();
-      const brief = await provider.generateDecisionBrief(
-        {
-          projectId: generateId(),
-          title: formData.title,
-          target: formData.target,
-          audience: formData.audience,
-          detail: formData.detail,
-        },
-        selectedDocs,
-        chunks
-      );
-
-      // Save to DB
-      await db.briefs.put(brief);
-      await db.activityLogs.put({
-        id: `log-${Date.now()}`,
-        action: "decision_brief",
-        entityType: "brief",
-        entityId: brief.id,
-        entityName: brief.title,
-        timestamp: new Date().toISOString(),
-        details: `从 ${selectedDocs.length} 份文档生成决策简报`,
-      });
-
-      setBriefs((prev) => [brief, ...prev]);
-      setActiveBrief(brief);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "生成简报失败");
-    }
-    setGenerating(false);
+    })();
   };
 
   const toggleSection = (sectionId: string) => {
