@@ -50,7 +50,7 @@ export class MockProvider implements AIProvider {
     const isGreeting = greetings.some(g => q === g.toLowerCase().replace(/[\s,，。.！!？?]/g, "")) || q === "";
     if (isGreeting && documents.length > 0) {
       return {
-        content: `你好！我是证流 AI 文档助手。\n\n当前已加载 ${documents.length} 份文档：${documents.map(d => `《${d.fileName}》`).join("、")}\n\n你可以直接问我文档相关的问题，比如：\n- "总结一下这些文档的主要内容"\n- "这几份文档有什么共同点？"\n- "文档中有哪些不同的观点？"\n\n注意：当前是 Mock 演示模式，回答基于本地分析。在设置中配置 DeepSeek API Key 可获得更智能的 AI 分析。`,
+        content: `你好！我是证流 AI 文档助手。\n\n当前已加载 ${documents.length} 份文档：${documents.map(d => `《${d.fileName}》`).join("、")}\n\n你可以直接问我文档相关的问题，比如："总结一下这些文档的主要内容"、"这几份文档有什么共同点"、"文档中有哪些不同的观点"\n\n注意：当前是 Mock 演示模式，回答基于本地分析。在设置中配置 DeepSeek API Key 可获得更智能的 AI 分析。`,
         citations: [],
       };
     }
@@ -85,17 +85,17 @@ export class MockProvider implements AIProvider {
 
     const docSummary = `分析范围：${documents.length} 份文档（${docNames}），共 ${chunks.length} 个文本片段。\n\n`;
     const extracted = relevantParts.length > 0
-      ? `**根据文档内容提取的关键信息：**\n\n${relevantParts.map((p, i) => `${i + 1}. ${p}`).join("\n\n")}\n\n`
-      : "**文档内容摘要：**\n\n" + chunks.slice(0, 3).map((c, i) => {
+      ? `根据文档内容提取的关键信息：\n\n${relevantParts.map((p, i) => `${i + 1}. ${p}`).join("\n\n")}\n\n`
+      : "文档内容摘要：\n\n" + chunks.slice(0, 3).map((c, i) => {
           const doc = documents.find(d => d.id === c.documentId);
           return `${i + 1}. [《${doc?.fileName || "未知"}》] ${c.content.slice(0, 200)}...`;
         }).join("\n\n") + "\n\n";
 
     let analysis = "";
     if (documents.length >= 2) {
-      analysis = `**跨文档分析：**\n\n这些文档从不同角度涉及了相关问题。上方引用展示了各文档的关键观点。请注意对比不同文档之间的异同，点击引用编号可查看原文出处。`;
+      analysis = `跨文档分析：\n\n这些文档从不同角度涉及了相关问题。上方引用展示了各文档的关键观点。请注意对比不同文档之间的异同，点击引用编号可查看原文出处。`;
     } else {
-      analysis = `**分析说明：**\n\n以上内容根据文档原文提取。点击引用编号可跳转到出处原文进行验证。这是本地 Mock 分析结果，配置 DeepSeek API 可获得更深度的 AI 分析。`;
+      analysis = `分析说明：\n\n以上内容根据文档原文提取。点击引用编号可跳转到出处原文进行验证。这是本地 Mock 分析结果，配置 DeepSeek API 可获得更深度的 AI 分析。`;
     }
 
     return {

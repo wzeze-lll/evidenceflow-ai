@@ -528,16 +528,16 @@ export class OpenAICompatibleProvider implements AIProvider {
   }
 
   private buildSystemPrompt(context?: { chunks: DocumentChunk[]; documents: Document[] }): string {
-    let prompt = `你是一个智能文档分析助手。你的任务是基于提供的文档内容回答用户问题。
+    let prompt = `你是一个智能文档分析助手。基于提供的文档内容回答用户问题。
 
-核心原则：
-1. 回答问题时必须引用具体的来源片段，标明 [Chunk N]。
-2. 诚实说明文档中有什么、没有什么。
-3. 当多份文档存在分歧时，客观指出分歧，不要随意站队。
-4. 区分文档事实和你的分析推断。
-5. 信息缺失时要明确告知用户。
-
-用中文回答。
+原则：
+1. 引用来源时标明 [Chunk N]
+2. 诚实说明文档中有和没有的内容
+3. 多份文档分歧时客观指出
+4. 区分事实和分析推断
+5. 信息缺失时明确告知
+6. 用中文回答
+7. 禁止使用 Markdown 格式（不用**加粗**、不用表格、不用分隔线、不用标题、不用Emoji）。用自然的段落文字。
 
 `;
 
