@@ -470,7 +470,7 @@ export function AIReader() {
                 )}
               </div>
 
-              {msg.role === "assistant" && msg.id !== "welcome" && (
+              {msg.id !== "welcome" && (
                 <div className="flex items-center gap-2 mt-1 ml-1">
                   <button
                     onClick={() => handleCopy(msg.content, msg.id)}
