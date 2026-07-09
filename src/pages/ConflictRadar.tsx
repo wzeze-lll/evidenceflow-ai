@@ -507,33 +507,20 @@ export function ConflictRadar() {
     setErrorMsg(null);
 
     try {
-      // Simulate analysis delay for UX
-      await new Promise((r) => setTimeout(r, 800));
+      // Always run fresh AI detection on selected documents
+      const provider = getAIProvider();
+      const selectedIds = Array.from(selectedDocIds);
+      const chunks = await db.chunks.where("documentId").anyOf(selectedIds).toArray();
+      const docs = await db.documents.bulkGet(selectedIds);
+      const detected = await provider.detectConflicts(selectedIds, docs.filter(Boolean) as Document[], chunks);
 
-      // Load all conflicts from DB
-      const allConflicts = await db.conflicts.toArray();
-
-      // Filter to those involving selected documents
-      const matched = allConflicts.filter((c) =>
-        c.documents.some((d) => selectedDocIds.has(d.documentId))
-      );
-
-      if (matched.length === 0) {
-        // No cached conflicts - run AI detection
-        const provider = getAIProvider();
-        const chunks = await db.chunks.where("documentId").anyOf(Array.from(selectedDocIds)).toArray();
-        const docs = await db.documents.bulkGet(Array.from(selectedDocIds));
-        const detected = await provider.detectConflicts(Array.from(selectedDocIds), docs.filter(Boolean) as Document[], chunks);
-        await db.conflicts.bulkPut(detected);
-        if (detected.length === 0) {
-          setConflicts([]);
-          setPhase("no-results");
-        } else {
-          setConflicts(detected);
-          setPhase("results");
-        }
+      if (detected.length === 0) {
+        setConflicts([]);
+        setPhase("no-results");
       } else {
-        setConflicts(matched);
+        // Save to DB
+        await db.conflicts.bulkPut(detected);
+        setConflicts(detected);
         setPhase("results");
       }
     } catch {
