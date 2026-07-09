@@ -327,8 +327,8 @@ export function Settings() {
               {settings.aiProvider !== "mock" && settings.aiProvider !== "custom" && (
                 <p className="text-xs text-muted-foreground">
                   注册获取 Key：
-                  <a href={PROVIDER_URLS[settings.aiProvider]} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline ml-1">
-                    {PROVIDER_URLS[settings.aiProvider]}
+                  <a href={`https://${PROVIDER_URLS[settings.aiProvider]}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline ml-1">
+                    https://{PROVIDER_URLS[settings.aiProvider]}
                   </a>
                 </p>
               )}
