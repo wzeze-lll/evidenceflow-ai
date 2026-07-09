@@ -7,7 +7,7 @@ import { getRelationLabel, getRelationColor } from "@/services/citation/citation
 import type { Evidence } from "@/types";
 
 export function EvidenceDrawer() {
-  const { evidenceDrawerOpen, closeEvidenceDrawer, evidenceDrawerData } = useAppStore();
+  const { evidenceDrawerOpen, closeEvidenceDrawer, evidenceDrawerData, setReaderDocId } = useAppStore();
   const [evidences, setEvidences] = useState<Evidence[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -111,7 +111,7 @@ export function EvidenceDrawer() {
 
                     {expandedId === evi.id && (
                       <button
-                        onClick={(e) => { e.stopPropagation(); const url = `${window.location.origin}${window.location.pathname}#/reader?doc=${evi.documentId}`; window.location.href = url; }}
+                        onClick={(e) => { e.stopPropagation(); setReaderDocId(evi.documentId); closeEvidenceDrawer(); window.location.hash = '#/reader'; }}
                         className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs hover:opacity-90 transition-colors"
                       >
                         <ExternalLink className="w-3 h-3" />

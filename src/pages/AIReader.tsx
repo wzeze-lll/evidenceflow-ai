@@ -24,9 +24,9 @@ function makeWelcomeMsg(): AIMessage {
 
 export function AIReader() {
   const [searchParams] = useSearchParams();
-  // Parse doc from hash query (HashRouter) or regular search params
-  const docParam = searchParams.get("doc") || new URLSearchParams(window.location.hash.split("?")[1] || "").get("doc");
-  const docId = docParam;
+  const urlDocId = searchParams.get("doc");
+  const { readerDocId, setReaderDocId } = useAppStore();
+  const docId = urlDocId || readerDocId;
   const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [chunks, setChunks] = useState<DocumentChunk[]>([]);
@@ -90,6 +90,8 @@ export function AIReader() {
   // Initial load from URL param on mount / URL change
   useEffect(() => {
     loadDataForDoc(docId || null);
+    // Clear the store docId after reading it
+    if (readerDocId) setReaderDocId(null);
   }, [docId, loadDataForDoc]);
 
   useEffect(() => {

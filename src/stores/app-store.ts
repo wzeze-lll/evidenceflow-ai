@@ -11,8 +11,10 @@ interface AppState {
   commandPaletteOpen: boolean;
   evidenceDrawerOpen: boolean;
   evidenceDrawerData: { claimId?: string; evidenceId?: string } | null;
+  readerDocId: string | null;
 
   loadDashboard: () => Promise<void>;
+  setReaderDocId: (id: string | null) => void;
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
   setCommandPaletteOpen: (open: boolean) => void;
@@ -29,6 +31,7 @@ export const useAppStore = create<AppState>((set) => ({
   commandPaletteOpen: false,
   evidenceDrawerOpen: false,
   evidenceDrawerData: null,
+  readerDocId: null,
 
   loadDashboard: async () => {
     try {
@@ -53,4 +56,5 @@ export const useAppStore = create<AppState>((set) => ({
   setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),
   openEvidenceDrawer: (data) => set({ evidenceDrawerOpen: true, evidenceDrawerData: data }),
   closeEvidenceDrawer: () => set({ evidenceDrawerOpen: false, evidenceDrawerData: null }),
+  setReaderDocId: (id) => set({ readerDocId: id }),
 }));
