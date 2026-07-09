@@ -539,30 +539,60 @@ Language: Respond in the same language as the user's question. For Chinese docum
   ): Citation[] {
     if (!context?.chunks || context.chunks.length === 0) return [];
     const citations: Citation[] = [];
-    // Match [Chunk N] or [N] references
-    const refRegex = /\[Chunk\s*(\d+)\]|\[(\d+)\]/g;
     const seen = new Set<number>();
-    let match;
-    while ((match = refRegex.exec(content)) !== null) {
-      const idx = parseInt(match[1] || match[2]) - 1;
-      if (idx >= 0 && idx < context.chunks.length && !seen.has(idx)) {
-        seen.add(idx);
-        const chunk = context.chunks[idx];
+
+    // Match various citation formats: [Chunk N], [N], 【N】, 片段N, Source N
+    const patterns = [
+      /\[Chunk\s*(\d+)\]/gi,
+      /\[(\d+)\]/g,
+      /【(\d+)】/g,
+      /片段\s*(\d+)/gi,
+      /Chunk\s*(\d+)/gi,
+    ];
+
+    for (const regex of patterns) {
+      let match;
+      while ((match = regex.exec(content)) !== null) {
+        const idx = parseInt(match[1]) - 1;
+        if (idx >= 0 && idx < context.chunks.length && !seen.has(idx)) {
+          seen.add(idx);
+          const chunk = context.chunks[idx];
+          const doc = context.documents?.find((d) => d.id === chunk.documentId);
+          citations.push({
+            id: generateId(),
+            chunkId: chunk.id,
+            documentId: chunk.documentId,
+            documentName: doc?.fileName || "未知",
+            text: chunk.content.slice(0, 300),
+            pageNumber: chunk.pageNumber,
+            sectionTitle: chunk.sectionTitle || "正文",
+            relation: "support",
+            relevanceScore: 0.9,
+          });
+        }
+      }
+    }
+
+    // If no explicit citations found, create citations from all provided chunks
+    if (citations.length === 0 && context.chunks.length > 0) {
+      for (let i = 0; i < Math.min(context.chunks.length, 5); i++) {
+        const chunk = context.chunks[i];
         const doc = context.documents?.find((d) => d.id === chunk.documentId);
         citations.push({
           id: generateId(),
           chunkId: chunk.id,
           documentId: chunk.documentId,
-          documentName: doc?.fileName || "Unknown",
+          documentName: doc?.fileName || "未知",
           text: chunk.content.slice(0, 300),
           pageNumber: chunk.pageNumber,
-          sectionTitle: chunk.sectionTitle,
+          sectionTitle: chunk.sectionTitle || "正文",
           relation: "support",
-          relevanceScore: 0.9,
+          relevanceScore: 0.8 - i * 0.1,
         });
       }
     }
-    return citations.slice(0, 5);
+
+    return citations.slice(0, 10);
   }
 }
 

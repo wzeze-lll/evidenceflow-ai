@@ -38,34 +38,70 @@ export class MockProvider implements AIProvider {
     messages: { role: string; content: string }[],
     context?: { chunks: DocumentChunk[]; documents: Document[] }
   ): Promise<{ content: string; citations: Citation[] }> {
-    await new Promise((r) => setTimeout(r, 500 + Math.random() * 800));
+    await new Promise((r) => setTimeout(r, 300 + Math.random() * 400));
     const chunks = context?.chunks || [];
     const documents = context?.documents || [];
     const lastMsg = messages.filter((m) => m.role === "user").pop();
     const question = lastMsg?.content || "";
 
-    const citations = makeCitations(chunks, documents, Math.min(3, chunks.length));
-
-    let answer: string;
-    if (chunks.length === 0) {
-      answer = `I couldn't find directly relevant information in the current documents to answer: "${question.slice(0, 100)}"
-
-**Suggestions:**
-1. Try uploading additional documents that may contain relevant information
-2. Rephrase your question to focus on topics covered in the available documents
-3. Check if the documents have been fully parsed`;
-    } else {
-      const findings = chunks.slice(0, 3).map((c, i) => `${i + 1}. ${c.content.slice(0, 150)}...`).join("\n");
-      answer = `Based on the provided documents, here is my analysis regarding: "${question.slice(0, 100)}"
-
-**Key Findings:**
-${findings}
-
-**Analysis:**
-The documents provide insights that help address this question. The cited excerpts above contain the most relevant information. Please review the source documents for complete context.`;
+    // Only detect actual greetings, not short questions
+    const greetings = ["你好", "nihao", "hello", "hi", "嗨", "在吗", "你是谁", "你能做什么", "介绍一下自己", "怎么用", "帮助", "help"];
+    const q = question.toLowerCase().replace(/[\s,，。.！!？?]/g, "");
+    const isGreeting = greetings.some(g => q === g.toLowerCase().replace(/[\s,，。.！!？?]/g, "")) || q === "";
+    if (isGreeting && documents.length > 0) {
+      return {
+        content: `你好！我是证流 AI 文档助手。\n\n当前已加载 ${documents.length} 份文档：${documents.map(d => `《${d.fileName}》`).join("、")}\n\n你可以直接问我文档相关的问题，比如：\n- "总结一下这些文档的主要内容"\n- "这几份文档有什么共同点？"\n- "文档中有哪些不同的观点？"\n\n注意：当前是 Mock 演示模式，回答基于本地分析。在设置中配置 DeepSeek API Key 可获得更智能的 AI 分析。`,
+        citations: [],
+      };
     }
 
-    return { content: answer, citations };
+    if (chunks.length === 0) {
+      return {
+        content: `我在当前文档中没有找到与"${question.slice(0, 50)}"直接相关的内容。请尝试上传更多文档，或换个方式提问。`,
+        citations: [],
+      };
+    }
+
+    // Build a smart mock response based on actual chunk content
+    const citations = makeCitations(chunks, documents, Math.min(5, chunks.length));
+    const docNames = [...new Set(chunks.map(c => documents.find(d => d.id === c.documentId)?.fileName || "未知"))].join("、");
+
+    // Extract actual keywords from question
+    const qWords = question.replace(/[?？,，。.！!]/g, "").split(/\s+/).filter(w => w.length > 1);
+
+    // Build a contextual answer based on chunk content
+    const relevantParts: string[] = [];
+    for (const chunk of chunks.slice(0, 4)) {
+      const doc = documents.find(d => d.id === chunk.documentId);
+      // Find sentences in chunk that match question keywords
+      const sentences = chunk.content.split(/[。.！!？?\n]/).filter(s => s.trim().length > 5);
+      const matching = sentences.filter(s => qWords.some(w => s.includes(w)));
+      if (matching.length > 0) {
+        relevantParts.push(`来自《${doc?.fileName || "未知"}》${chunk.pageNumber ? `第${chunk.pageNumber}页` : ""}：${matching[0].trim()}`);
+      } else if (sentences.length > 0) {
+        relevantParts.push(`来自《${doc?.fileName || "未知"}》${chunk.pageNumber ? `第${chunk.pageNumber}页` : ""}：${sentences[0].trim()}`);
+      }
+    }
+
+    const docSummary = `分析范围：${documents.length} 份文档（${docNames}），共 ${chunks.length} 个文本片段。\n\n`;
+    const extracted = relevantParts.length > 0
+      ? `**根据文档内容提取的关键信息：**\n\n${relevantParts.map((p, i) => `${i + 1}. ${p}`).join("\n\n")}\n\n`
+      : "**文档内容摘要：**\n\n" + chunks.slice(0, 3).map((c, i) => {
+          const doc = documents.find(d => d.id === c.documentId);
+          return `${i + 1}. [《${doc?.fileName || "未知"}》] ${c.content.slice(0, 200)}...`;
+        }).join("\n\n") + "\n\n";
+
+    let analysis = "";
+    if (documents.length >= 2) {
+      analysis = `**跨文档分析：**\n\n这些文档从不同角度涉及了相关问题。上方引用展示了各文档的关键观点。请注意对比不同文档之间的异同，点击引用编号可查看原文出处。`;
+    } else {
+      analysis = `**分析说明：**\n\n以上内容根据文档原文提取。点击引用编号可跳转到出处原文进行验证。这是本地 Mock 分析结果，配置 DeepSeek API 可获得更深度的 AI 分析。`;
+    }
+
+    return {
+      content: `关于"${question.slice(0, 80)}"\n\n${docSummary}${extracted}${analysis}`,
+      citations,
+    };
   }
 
   async streamChat(

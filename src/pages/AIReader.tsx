@@ -177,7 +177,7 @@ export function AIReader() {
         await db.claims.put({
           id: claimId,
           conversationId: conv.id,
-          content: assistantMsg.content.slice(0, 200),
+          content: `**问题：** ${userMsg.content}\n\n**回答：** ${assistantMsg.content}`,
           confidence: supportCount > 0 ? 'high' : 'medium',
           evidenceCount: response.citations.length,
           supportCount,

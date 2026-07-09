@@ -19,16 +19,25 @@ function splitIntoSections(text: string): { title: string; content: string; page
   let pageNum = 1;
 
   for (const line of lines) {
+    // Detect markdown headings
     if (/^#{1,3}\s/.test(line)) {
       if (currentContent.trim()) {
         sections.push({ title: currentTitle || "正文", content: currentContent.trim(), pageNumber: pageNum });
       }
       currentTitle = line.replace(/^#{1,3}\s*/, "").trim();
       currentContent = "";
-    } else {
-      currentContent += line + "\n";
+      continue;
     }
-    if (currentContent.length > 3000) {
+    // Split on empty lines (paragraph boundary) for better chunking
+    if (line.trim() === "" && currentContent.length > 200) {
+      sections.push({ title: currentTitle || "正文", content: currentContent.trim(), pageNumber: pageNum });
+      currentContent = "";
+      pageNum++;
+      continue;
+    }
+    currentContent += line + "\n";
+    // Split large chunks at reasonable size
+    if (currentContent.length > 800) {
       sections.push({ title: currentTitle || "正文", content: currentContent.trim(), pageNumber: pageNum });
       currentContent = "";
       pageNum++;
@@ -38,7 +47,16 @@ function splitIntoSections(text: string): { title: string; content: string; page
     sections.push({ title: currentTitle || "正文", content: currentContent.trim(), pageNumber: pageNum });
   }
   if (sections.length === 0 && text.trim()) {
-    sections.push({ title: "正文", content: text.trim().slice(0, 5000), pageNumber: 1 });
+    // Force-split large text into smaller chunks
+    const chunks: string[] = [];
+    for (let i = 0; i < text.length; i += 800) {
+      chunks.push(text.slice(i, i + 800).trim());
+    }
+    return chunks.filter(c => c).map((c, i) => ({
+      title: "正文",
+      content: c,
+      pageNumber: Math.floor(i / 2) + 1,
+    }));
   }
   return sections;
 }

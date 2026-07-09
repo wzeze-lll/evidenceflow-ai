@@ -67,10 +67,25 @@ export function retrieveRelevantChunks(
 }
 
 function tokenize(text: string): string[] {
-  // Split on whitespace and punctuation, keep Chinese characters
-  return text
-    .split(/[\s,.;:!?()\[\]{}"']+/)
-    .filter((t) => t.length > 0);
+  const tokens: string[] = [];
+
+  // Split by whitespace and punctuation
+  const parts = text.split(/[\s,.;:!?()\[\]{}"'，。！？；：、""''《》【】\n\r\t]+/).filter(Boolean);
+
+  for (const part of parts) {
+    // For pure Chinese text (no spaces), use bigram tokenization
+    if (/^[一-鿿]+$/.test(part) && part.length >= 2) {
+      for (let i = 0; i < part.length - 1; i++) {
+        tokens.push(part.slice(i, i + 2));
+      }
+      if (part.length >= 1) tokens.push(part);
+    } else {
+      // For mixed or English text, use as-is
+      tokens.push(part);
+    }
+  }
+
+  return tokens.filter(t => t.length > 0);
 }
 
 /**

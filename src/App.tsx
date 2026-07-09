@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import { useEffect, Suspense, lazy } from "react";
 import { AppLayout, FullPageLayout } from "@/components/layout/AppLayout";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -114,8 +114,8 @@ export default function App() {
   }, [load]);
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <AppRoutes />
-    </BrowserRouter>
+    </HashRouter>
   );
 }
