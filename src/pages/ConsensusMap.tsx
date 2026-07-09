@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { GitCompare, CheckCircle2, AlertTriangle, Shield, HelpCircle, Users } from "lucide-react";
@@ -71,9 +72,9 @@ export function ConsensusMap() {
         <p className="text-muted-foreground mb-4">
           上传多份相关文档，使用 AI 阅读来发现共识和分歧。
         </p>
-        <a href="/reader" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm">
+        <Link to="/reader" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm">
           前往 AI 阅读 →
-        </a>
+        </Link>
       </div>
     );
   }

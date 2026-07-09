@@ -21,7 +21,7 @@ function PageLoader() {
     <div className="flex items-center justify-center h-64">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-        Loading...
+        加载中...
       </div>
     </div>
   );
@@ -102,7 +102,22 @@ function AppRoutes() {
           }
         />
       </Route>
+
+      {/* 404 catch-all */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
+  );
+}
+
+function NotFound() {
+  return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="text-center">
+        <h1 className="text-6xl font-bold text-muted-foreground/30 mb-4">404</h1>
+        <p className="text-lg font-medium mb-2">页面未找到</p>
+        <p className="text-sm text-muted-foreground">你访问的页面不存在或已被移除。</p>
+      </div>
+    </div>
   );
 }
 

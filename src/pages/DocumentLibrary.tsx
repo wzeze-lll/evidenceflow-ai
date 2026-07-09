@@ -24,7 +24,14 @@ export function DocumentLibrary() {
   const [showFavorites, setShowFavorites] = useState(false);
   const { loadDashboard } = useAppStore();
 
-  const showUpload = true;
+  const parseStatusLabel = (status: string) => {
+    switch (status) {
+      case "ready": return "就绪";
+      case "parsing": return "解析中";
+      case "error": return "错误";
+      default: return status;
+    }
+  };
 
   const loadDocuments = useCallback(async () => {
     setLoading(true);
@@ -285,8 +292,7 @@ export function DocumentLibrary() {
       </div>
 
       {/* Upload Area */}
-      {showUpload && (
-        <motion.div
+      <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           className="mb-6"
@@ -323,7 +329,6 @@ export function DocumentLibrary() {
             </div>
           )}
         </motion.div>
-      )}
 
       {/* Document List */}
       {loading ? (
@@ -384,7 +389,7 @@ export function DocumentLibrary() {
                   ) : (
                     <AlertCircle className="w-3 h-3 text-destructive" />
                   )}
-                  {doc.parseStatus}
+                  {parseStatusLabel(doc.parseStatus)}
                 </div>
               </div>
               <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border">
@@ -409,7 +414,7 @@ export function DocumentLibrary() {
                   {doc.pageCount} 页 · {formatFileSize(doc.fileSize)} · {doc.chunkCount} 文本块
                 </div>
               </div>
-              <div className="text-xs text-muted-foreground">{doc.parseStatus}</div>
+              <div className="text-xs text-muted-foreground">{parseStatusLabel(doc.parseStatus)}</div>
               <Link to={`/reader?doc=${doc.id}`} className="text-xs text-primary hover:underline shrink-0">
                 打开 →
               </Link>
@@ -436,14 +441,14 @@ export function DocumentLibrary() {
             <div className="p-6 space-y-4">
               <div>
                 <h3 className="font-medium">{detailDoc.fileName}</h3>
-                <p className="text-xs text-muted-foreground mt-1">文件类型： {detailDoc.fileType.toUpperCase()}</p>
+                <p className="text-xs text-muted-foreground mt-1">文件类型： {detailDoc.fileType}</p>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div><span className="text-muted-foreground">大小：</span> {formatFileSize(detailDoc.fileSize)}</div>
                 <div><span className="text-muted-foreground">页数：</span> {detailDoc.pageCount}</div>
                 <div><span className="text-muted-foreground">字数：</span> {detailDoc.wordCount}</div>
                 <div><span className="text-muted-foreground">文本块：</span> {detailDoc.chunkCount}</div>
-                <div><span className="text-muted-foreground">状态：</span> {detailDoc.parseStatus}</div>
+                <div><span className="text-muted-foreground">状态：</span> {parseStatusLabel(detailDoc.parseStatus)}</div>
                 <div><span className="text-muted-foreground">创建时间：</span> {formatDate(detailDoc.createdAt)}</div>
               </div>
               {detailDoc.summary && (

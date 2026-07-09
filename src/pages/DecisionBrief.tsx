@@ -95,7 +95,7 @@ export function DecisionBrief() {
         entityId: brief.id,
         entityName: brief.title,
         timestamp: new Date().toISOString(),
-        details: `Generated decision brief from ${selectedDocs.length} documents`,
+        details: `从 ${selectedDocs.length} 份文档生成决策简报`,
       });
 
       setBriefs((prev) => [brief, ...prev]);

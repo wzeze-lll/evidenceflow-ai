@@ -141,7 +141,7 @@ export function Settings() {
       await new Promise((resolve, reject) => {
         setTimeout(() => {
           if (!settings.aiApiKey && settings.aiProvider !== "mock") {
-            reject(new Error("API Key is required for this provider."));
+            reject(new Error("此服务需要 API Key。"));
             return;
           }
           if (settings.aiProvider === "mock") {
@@ -329,7 +329,7 @@ export function Settings() {
             {/* Base URL (custom only) */}
             {settings.aiProvider === "custom" && (
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Base URL</label>
+                <label className="text-sm font-medium">基础 URL</label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <Globe className="w-4 h-4 text-muted-foreground" />
@@ -485,7 +485,7 @@ export function Settings() {
                   
                 </p>
                 <Badge variant="success" className="mt-2 text-[10px]">
-                  Active
+                  已激活
                 </Badge>
               </div>
 

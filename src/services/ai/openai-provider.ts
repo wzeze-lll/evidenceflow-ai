@@ -311,7 +311,19 @@ export class OpenAICompatibleProvider implements AIProvider {
         id: generateId(),
         createdAt: new Date().toISOString(),
         documents: c.documents.map((d: any) => {
-          const matched = documents.find((doc) => d.documentRef && doc.fileName.includes(d.documentRef));
+          const matched = documents.find((doc) => {
+            if (!d.documentRef) return false;
+            // Try exact match first
+            if (doc.fileName === d.documentRef) return true;
+            // Try case-insensitive normalized match
+            const normFileName = doc.fileName.toLowerCase().trim();
+            const normRef = d.documentRef.toLowerCase().trim();
+            if (normFileName === normRef) return true;
+            // Try substring match with minimum length guard (3+ chars to avoid false positives)
+            if (normRef.length >= 3 && normFileName.includes(normRef)) return true;
+            if (normFileName.length >= 3 && normRef.includes(normFileName)) return true;
+            return false;
+          });
           return {
             documentId: matched?.id || documents[0]?.id || "",
             documentName: d.documentRef || matched?.fileName || "",
@@ -384,16 +396,28 @@ Return only the JSON array. Focus on meaningful agreements across documents.`,
       return topics.map((t) => ({
         ...t,
         id: generateId(),
-        supportingDocuments: t.supportingDocuments.map((s: Record<string, string>) => ({
-          documentId: documents[0]?.id || "",
-          documentName: documents[0]?.fileName || "",
-          excerpt: s.excerpt || "",
-        })),
-        opposingDocuments: (t.opposingDocuments || []).map((o: Record<string, string>) => ({
-          documentId: documents[0]?.id || "",
-          documentName: documents[0]?.fileName || "",
-          excerpt: o.excerpt || "",
-        })),
+        supportingDocuments: t.supportingDocuments.map((s: Record<string, string>) => {
+          const docRef = s.documentRef || "";
+          const matched = documents.find((doc) =>
+            docRef && (doc.fileName === docRef || doc.fileName.includes(docRef) || docRef.includes(doc.fileName))
+          );
+          return {
+            documentId: matched?.id || documents[0]?.id || "",
+            documentName: matched?.fileName || docRef || documents[0]?.fileName || "",
+            excerpt: s.excerpt || "",
+          };
+        }),
+        opposingDocuments: (t.opposingDocuments || []).map((o: Record<string, string>) => {
+          const docRef = o.documentRef || "";
+          const matched = documents.find((doc) =>
+            docRef && (doc.fileName === docRef || doc.fileName.includes(docRef) || docRef.includes(doc.fileName))
+          );
+          return {
+            documentId: matched?.id || documents[0]?.id || "",
+            documentName: matched?.fileName || docRef || documents[0]?.fileName || "",
+            excerpt: o.excerpt || "",
+          };
+        }),
       }));
     } catch {
       return [];

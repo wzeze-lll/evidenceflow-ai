@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -14,14 +14,32 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useAppStore } from "@/stores/app-store";
+import { db } from "@/db/database";
 import { formatDate, cn } from "@/lib/utils";
 
 export function Dashboard() {
   const { workspaces, recentDocuments, activityLogs, loaded, loadDashboard } = useAppStore();
+  const [conflictCount, setConflictCount] = useState(0);
+  const [consensusCount, setConsensusCount] = useState(0);
+  const [briefCount, setBriefCount] = useState(0);
 
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
+
+  useEffect(() => {
+    if (loaded) {
+      Promise.all([
+        db.conflicts.count(),
+        db.consensusTopics.count(),
+        db.briefs.count(),
+      ]).then(([conflicts, consensus, briefs]) => {
+        setConflictCount(conflicts);
+        setConsensusCount(consensus);
+        setBriefCount(briefs);
+      });
+    }
+  }, [loaded]);
 
   if (!loaded) {
     return (
@@ -100,9 +118,9 @@ export function Dashboard() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
             { label: "文档", value: recentDocuments.length, icon: FolderOpen },
-            { label: "已发现冲突", value: 3, icon: AlertTriangle },
-            { label: "共识主题", value: 5, icon: GitCompare },
-            { label: "决策简报", value: 1, icon: FileText },
+            { label: "已发现冲突", value: conflictCount, icon: AlertTriangle },
+            { label: "共识主题", value: consensusCount, icon: GitCompare },
+            { label: "决策简报", value: briefCount, icon: FileText },
           ].map((stat) => (
             <div key={stat.label} className="p-5 rounded-xl border border-border bg-card">
               <div className="flex items-center gap-3 mb-3">

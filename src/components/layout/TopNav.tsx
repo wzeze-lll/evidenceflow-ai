@@ -33,7 +33,7 @@ export function TopNav() {
           <button
             onClick={toggleSidebar}
             className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors"
-            title="Toggle sidebar"
+            title="切换侧边栏"
           >
             <PanelLeft className="w-4 h-4" />
           </button>
@@ -45,7 +45,7 @@ export function TopNav() {
         <button
           onClick={cycleTheme}
           className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors"
-          title={`Theme: ${settings.theme}`}
+          title={`主题：${settings.theme}`}
         >
           <ThemeIcon className="w-4 h-4" />
         </button>

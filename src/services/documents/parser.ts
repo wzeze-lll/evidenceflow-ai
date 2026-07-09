@@ -85,7 +85,10 @@ function extractKeywords(text: string): string[] {
  * Extract text from a PDF file using pdfjs-dist.
  * Falls back with a clear error message if the PDF cannot be read (e.g. scanned images).
  */
-async function extractPdfText(file: File): Promise<string> {
+async function extractPdfText(file: File): Promise<{
+  fullText: string;
+  pages: { text: string; pageNumber: number }[];
+}> {
   const pdfjsLib = await import("pdfjs-dist");
 
   // Configure the worker — use CDN for the matching pdfjs-dist version
@@ -96,17 +99,17 @@ async function extractPdfText(file: File): Promise<string> {
   const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
   const pdf = await loadingTask.promise;
 
-  const pages: string[] = [];
+  const pages: { text: string; pageNumber: number }[] = [];
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const textContent = await page.getTextContent();
     const pageText = textContent.items
       .map((item: any) => ('str' in item ? item.str : ''))
       .join(" ");
-    pages.push(pageText);
+    pages.push({ text: pageText, pageNumber: i });
   }
 
-  const fullText = pages.join("\n").trim();
+  const fullText = pages.map(p => p.text).join("\n").trim();
 
   if (!fullText) {
     throw new Error(
@@ -114,13 +117,88 @@ async function extractPdfText(file: File): Promise<string> {
     );
   }
 
-  return fullText;
+  return { fullText, pages };
 }
 
 export async function parseFile(file: File): Promise<{ document: Document; chunks: DocumentChunk[] }> {
   const fileType = getDocumentType(file.name);
 
   try {
+    // ── PDF handling: preserve actual page numbers ──
+    if (fileType === "pdf") {
+      const { fullText: text, pages } = await extractPdfText(file);
+
+      if (!text.trim()) {
+        throw new Error("无法从文件中提取文本内容。请确认文件不是扫描版或空文件。");
+      }
+
+      const words = text.split(/[\s,.;:!?()\[\]{}"'\n\r\t]+/).filter(Boolean);
+      const docId = generateId();
+      const now = new Date().toISOString();
+
+      const document: Document = {
+        id: docId,
+        workspaceId: "",
+        fileName: file.name,
+        fileType,
+        fileSize: file.size,
+        pageCount: pages.length,
+        wordCount: words.length,
+        parseStatus: "ready",
+        tags: [],
+        isFavorite: false,
+        createdAt: now,
+        updatedAt: now,
+        lastOpenedAt: now,
+        summary: text.slice(0, 200).replace(/\n/g, " "),
+        keywords: extractKeywords(text),
+        chunkCount: 0, // updated below
+      };
+
+      // For PDFs, create chunks from actual pages with correct page numbers
+      const pdfChunks: DocumentChunk[] = [];
+      for (const page of pages) {
+        const pageText = page.text.trim();
+        if (!pageText) continue;
+        if (pageText.length <= 800) {
+          pdfChunks.push({
+            id: `${docId}-chunk-${pdfChunks.length}`,
+            documentId: docId,
+            content: pageText.slice(0, 5000),
+            pageNumber: page.pageNumber,
+            sectionTitle: `第 ${page.pageNumber} 页`,
+            position: pdfChunks.length,
+            keywords: extractKeywords(pageText),
+            createdAt: now,
+          });
+        } else {
+          // Split long pages into sub-chunks but keep the same page number
+          let offset = 0;
+          while (offset < pageText.length) {
+            const chunkText = pageText.slice(offset, offset + 800).trim();
+            if (chunkText) {
+              pdfChunks.push({
+                id: `${docId}-chunk-${pdfChunks.length}`,
+                documentId: docId,
+                content: chunkText.slice(0, 5000),
+                pageNumber: page.pageNumber,
+                sectionTitle: `第 ${page.pageNumber} 页`,
+                position: pdfChunks.length,
+                keywords: extractKeywords(chunkText),
+                createdAt: now,
+              });
+            }
+            offset += 800;
+          }
+        }
+      }
+
+      document.chunkCount = pdfChunks.length;
+
+      return { document, chunks: pdfChunks };
+    }
+
+    // ── DOCX, TXT, MD, and other plain-text formats ──
     let text: string;
 
     if (fileType === "docx") {
@@ -128,8 +206,6 @@ export async function parseFile(file: File): Promise<{ document: Document; chunk
       const mammoth = await import("mammoth");
       const extracted = await mammoth.extractRawText({ arrayBuffer });
       text = extracted.value;
-    } else if (fileType === "pdf") {
-      text = await extractPdfText(file);
     } else {
       // TXT, MD, and other plain-text formats
       text = await file.text();
