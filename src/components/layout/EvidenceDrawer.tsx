@@ -111,7 +111,7 @@ export function EvidenceDrawer() {
 
                     {expandedId === evi.id && (
                       <button
-                        onClick={(e) => { e.stopPropagation(); closeEvidenceDrawer(); window.location.hash = `/reader?doc=${evi.documentId}`; }}
+                        onClick={(e) => { e.stopPropagation(); const url = `${window.location.origin}${window.location.pathname}#/reader?doc=${evi.documentId}`; window.location.href = url; }}
                         className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs hover:opacity-90 transition-colors"
                       >
                         <ExternalLink className="w-3 h-3" />

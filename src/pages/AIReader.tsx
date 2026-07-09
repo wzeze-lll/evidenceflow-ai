@@ -24,7 +24,9 @@ function makeWelcomeMsg(): AIMessage {
 
 export function AIReader() {
   const [searchParams] = useSearchParams();
-  const docId = searchParams.get("doc");
+  // Parse doc from hash query (HashRouter) or regular search params
+  const docParam = searchParams.get("doc") || new URLSearchParams(window.location.hash.split("?")[1] || "").get("doc");
+  const docId = docParam;
   const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [chunks, setChunks] = useState<DocumentChunk[]>([]);
