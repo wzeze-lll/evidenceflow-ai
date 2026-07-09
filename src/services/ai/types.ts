@@ -33,8 +33,12 @@ export interface AIProviderConfig {
 }
 
 export const AI_PROVIDER_CONFIGS: AIProviderConfig[] = [
-  { id: "mock", name: "Mock Demo Provider", type: "mock", needsKey: false, needsBaseUrl: false },
-  { id: "openai", name: "OpenAI Compatible", type: "openai", needsKey: true, needsBaseUrl: false },
-  { id: "deepseek", name: "DeepSeek Compatible", type: "deepseek", needsKey: true, needsBaseUrl: false },
-  { id: "custom", name: "Custom OpenAI-Compatible", type: "custom", needsKey: true, needsBaseUrl: true },
+  { id: "mock", name: "模拟演示（无需 Key）", type: "mock", needsKey: false, needsBaseUrl: false },
+  { id: "deepseek", name: "DeepSeek", type: "deepseek", needsKey: true, needsBaseUrl: false },
+  { id: "openai", name: "OpenAI", type: "openai", needsKey: true, needsBaseUrl: false },
+  { id: "qwen", name: "通义千问（阿里）", type: "qwen", needsKey: true, needsBaseUrl: false },
+  { id: "glm", name: "智谱 GLM", type: "glm", needsKey: true, needsBaseUrl: false },
+  { id: "moonshot", name: "月之暗面 Kimi", type: "moonshot", needsKey: true, needsBaseUrl: false },
+  { id: "siliconflow", name: "硅基流动 SiliconFlow", type: "siliconflow", needsKey: true, needsBaseUrl: false },
+  { id: "custom", name: "自定义接口", type: "custom", needsKey: true, needsBaseUrl: true },
 ];

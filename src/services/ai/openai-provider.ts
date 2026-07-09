@@ -170,7 +170,7 @@ export class OpenAICompatibleProvider implements AIProvider {
         messages: [
           {
             role: "system",
-            content: `你是一个文档分析师。请提供一份${mode}摘要，包括关键要点、重要数据和建议行动。用方括号中的编号引用来源片段，如 [1]、[2]。`,
+            content: `你是一个文档分析师。请提供一份${mode}摘要，包括关键要点、重要数据和建议行动。引用来源时使用文档名称，如"《文档名》中提到..."。`,
           },
           {
             role: "user",
@@ -239,7 +239,7 @@ export class OpenAICompatibleProvider implements AIProvider {
     }
 
     const docContexts = Array.from(docMap.entries()).map(([, info]) =>
-      `【文档：${info.name}】\n${info.texts.map((t, j) => `[片段${j + 1}] ${t}`).join("\n")}`
+      `【${info.name}】\n${info.texts.join("\n")}`
     ).join("\n\n========\n\n");
 
     const res = await fetch(`${this.config.baseUrl}/chat/completions`, {
@@ -531,7 +531,7 @@ export class OpenAICompatibleProvider implements AIProvider {
     let prompt = `你是一个智能文档分析助手。基于提供的文档内容回答用户问题。
 
 原则：
-1. 引用来源时标明 [Chunk N]
+1. 引用来源时使用文档名称，如"《文档名》中提到..."
 2. 诚实说明文档中有和没有的内容
 3. 多份文档分歧时客观指出
 4. 区分事实和分析推断
@@ -542,12 +542,14 @@ export class OpenAICompatibleProvider implements AIProvider {
 `;
 
     if (context?.chunks && context.chunks.length > 0) {
-      prompt += `\n--- REFERENCE DOCUMENTS ---\n`;
+      prompt += `\n--- 参考文档内容 ---\n`;
       for (let i = 0; i < context.chunks.length; i++) {
         const chunk = context.chunks[i];
         const doc = context.documents?.find((d) => d.id === chunk.documentId);
-        prompt += `\n[Chunk ${i + 1}] From "${doc?.fileName || "unknown"}"`;
-        if (chunk.pageNumber) prompt += ` (Page ${chunk.pageNumber})`;
+        prompt += `\n【${doc?.fileName || "未知文档"}】`;
+        if (chunk.pageNumber) prompt += ` 第${chunk.pageNumber}页`;
+        if (chunk.sectionTitle) prompt += ` ${chunk.sectionTitle}`;
+        prompt += `:\n${chunk.content}\n`;
         if (chunk.sectionTitle) prompt += ` - ${chunk.sectionTitle}`;
         prompt += `:\n${chunk.content}\n`;
       }
@@ -564,7 +566,7 @@ export class OpenAICompatibleProvider implements AIProvider {
     const citations: Citation[] = [];
     const seen = new Set<number>();
 
-    // Match various citation formats: [Chunk N], [N], 【N】, 片段N, Source N
+    // Match [Chunk N], [N], 【N】, 《文档名》
     const patterns = [
       /\[Chunk\s*(\d+)\]/gi,
       /\[(\d+)\]/g,
@@ -592,6 +594,35 @@ export class OpenAICompatibleProvider implements AIProvider {
             relation: "support",
             relevanceScore: 0.9,
           });
+        }
+      }
+    }
+
+    // Also match document name references: 《文档名》
+    if (context.documents) {
+      for (const doc of context.documents) {
+        const namePattern = new RegExp(`《${doc.fileName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}》`, 'g');
+        if (namePattern.test(content) && !seen.has(-1)) {
+          // Find chunks from this document
+          const docChunks = context.chunks.filter(c => c.documentId === doc.id);
+          for (const chunk of docChunks.slice(0, 3)) {
+            if (citations.length >= 10) break;
+            const idx = context.chunks.indexOf(chunk);
+            if (idx >= 0 && !seen.has(idx)) {
+              seen.add(idx);
+              citations.push({
+                id: generateId(),
+                chunkId: chunk.id,
+                documentId: chunk.documentId,
+                documentName: doc.fileName,
+                text: chunk.content.slice(0, 300),
+                pageNumber: chunk.pageNumber,
+                sectionTitle: chunk.sectionTitle || "正文",
+                relation: "support",
+                relevanceScore: 0.85,
+              });
+            }
+          }
         }
       }
     }
