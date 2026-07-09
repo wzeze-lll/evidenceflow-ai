@@ -15,6 +15,8 @@ import {
   Highlighter,
   Lightbulb,
   ListChecks,
+  Trash2,
+  Clock,
 } from "lucide-react";
 import { db } from "@/db/database";
 import { getAIProvider } from "@/services/ai/provider";
@@ -347,6 +349,92 @@ function SkeletonLoader() {
 
 type AnalysisPhase = "idle" | "selecting" | "analyzing" | "results" | "no-results" | "error";
 
+// Saved analyses list (similar to DecisionBrief sidebar)
+function ConflictHistory({
+  onSelect,
+  onDelete,
+}: {
+  onSelect: (conflicts: ConflictItem[]) => void;
+  onDelete: (ids: string[]) => void;
+}) {
+  const [analyses, setAnalyses] = useState<{ topic: string; count: number; ids: string[]; date: string; conflicts: ConflictItem[]; docNames: string[] }[]>([]);
+
+  useEffect(() => {
+    loadAnalyses();
+  }, []);
+
+  const loadAnalyses = async () => {
+    try {
+      const all = await db.conflicts.toArray();
+      // Group by time window (30-min buckets)
+      const groups: Record<string, ConflictItem[]> = {};
+      for (const c of all) {
+        const t = new Date(c.createdAt).getTime();
+        const bucket = Math.floor(t / (30 * 60 * 1000)).toString();
+        if (!groups[bucket]) groups[bucket] = [];
+        groups[bucket].push(c);
+      }
+      const items = Object.entries(groups)
+        .map(([, conflicts]) => ({
+          topic: conflicts[0]?.topic || "未知主题",
+          count: conflicts.length,
+          ids: conflicts.map(c => c.id),
+          date: conflicts[0]?.createdAt || "",
+          conflicts,
+          docNames: [...new Set(conflicts.flatMap(c => c.documents.map(d => d.documentName)))],
+        }))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setAnalyses(items);
+    } catch {
+      setAnalyses([]);
+    }
+  };
+
+  if (analyses.length === 0) return null;
+
+  const fmtDate = (iso: string) => {
+    const d = new Date(iso);
+    return `${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="mb-6 p-4 rounded-xl border border-border bg-card">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold">历史分析记录</h3>
+        <span className="text-xs text-muted-foreground">{analyses.length} 条</span>
+      </div>
+      <div className="space-y-1 max-h-48 overflow-y-auto">
+        {analyses.map((a, i) => (
+          <div key={i} className="flex items-center group">
+            <button
+              onClick={() => onSelect(a.conflicts)}
+              className="flex-1 flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-muted transition-colors text-left"
+            >
+              <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-medium text-xs">{a.topic}</div>
+                <div className="text-xs text-muted-foreground">
+                  {fmtDate(a.date)} · {a.count} 个冲突 · {a.docNames.slice(0, 2).join("、")}
+                </div>
+              </div>
+            </button>
+            <button
+              onClick={async () => {
+                await onDelete(a.ids);
+                setAnalyses(prev => prev.filter((_, j) => j !== i));
+              }}
+              className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive shrink-0"
+              title="删除"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function ConflictRadar() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
@@ -525,15 +613,23 @@ export function ConflictRadar() {
               检测并展示文档间的矛盾观点
             </p>
           </div>
-          {phase === "results" && (
-            <button
-              onClick={() => setPhase("selecting")}
-              className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted transition-colors"
-            >
-              重新分析
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {phase === "results" && (
+              <button
+                onClick={() => setPhase("selecting")}
+                className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted transition-colors"
+              >
+                重新分析
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Saved Analyses */}
+        <ConflictHistory
+          onSelect={(c) => { setConflicts(c); setPhase("results"); }}
+          onDelete={async (ids) => { await db.conflicts.bulkDelete(ids); }}
+        />
 
         {/* Document selector + Analyze */}
         {(phase === "idle" || phase === "selecting") && (
