@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, FileText, MapPin, Link2, Loader2, ExternalLink } from "lucide-react";
+import { X, FileText, MapPin, Link2, Loader2 } from "lucide-react";
 import { useAppStore } from "@/stores/app-store";
 import { db } from "@/db/database";
 import { getRelationLabel, getRelationColor } from "@/services/citation/citation-mapper";
 import type { Evidence } from "@/types";
 
 export function EvidenceDrawer() {
-  const { evidenceDrawerOpen, closeEvidenceDrawer, evidenceDrawerData, setReaderDocId } = useAppStore();
+  const { evidenceDrawerOpen, closeEvidenceDrawer, evidenceDrawerData } = useAppStore();
   const [evidences, setEvidences] = useState<Evidence[]>([]);
+  const [fullTexts, setFullTexts] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -21,19 +22,26 @@ export function EvidenceDrawer() {
   const loadEvidence = async () => {
     setLoading(true);
     try {
+      let evids: Evidence[] = [];
       if (evidenceDrawerData?.claimId) {
-        // Load all evidence for a claim
-        const evids = await db.evidences.where("claimId").equals(evidenceDrawerData.claimId).toArray();
-        setEvidences(evids);
+        evids = await db.evidences.where("claimId").equals(evidenceDrawerData.claimId).toArray();
       } else if (evidenceDrawerData?.evidenceId) {
-        // Load single evidence
         const evid = await db.evidences.get(evidenceDrawerData.evidenceId);
-        setEvidences(evid ? [evid] : []);
+        evids = evid ? [evid] : [];
       } else {
-        // Load all evidence
-        const all = await db.evidences.orderBy("createdAt").reverse().limit(20).toArray();
-        setEvidences(all.length > 0 ? all : []);
+        evids = await db.evidences.orderBy("createdAt").reverse().limit(20).toArray();
       }
+      setEvidences(evids);
+
+      // Pre-load full chunk content for all evidence
+      const texts: Record<string, string> = {};
+      for (const evi of evids) {
+        if (evi.chunkId) {
+          const chunk = await db.chunks.get(evi.chunkId);
+          if (chunk) texts[evi.id] = chunk.content;
+        }
+      }
+      setFullTexts(texts);
     } catch {
       setEvidences([]);
     }
@@ -86,7 +94,10 @@ export function EvidenceDrawer() {
                     </div>
 
                     <blockquote className="text-sm text-muted-foreground border-l-2 border-primary/30 pl-3 py-1 mb-3 italic">
-                      "{expandedId === evi.id ? evi.text : (evi.text.length > 200 ? evi.text.slice(0, 200) + '...' : evi.text)}"
+                      {expandedId === evi.id && fullTexts[evi.id]
+                        ? fullTexts[evi.id]
+                        : (evi.text.length > 200 ? evi.text.slice(0, 200) + '...' : evi.text)
+                      }
                     </blockquote>
 
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -110,13 +121,9 @@ export function EvidenceDrawer() {
                     </div>
 
                     {expandedId === evi.id && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setReaderDocId(evi.documentId); closeEvidenceDrawer(); window.location.hash = '#/reader'; }}
-                        className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs hover:opacity-90 transition-colors"
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                        在阅读器中打开此文档
-                      </button>
+                      <div className="mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
+                        以上为该文档相关段落的完整原文。
+                      </div>
                     )}
                   </div>
                 ))

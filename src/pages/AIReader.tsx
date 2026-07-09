@@ -90,9 +90,15 @@ export function AIReader() {
   // Initial load from URL param on mount / URL change
   useEffect(() => {
     loadDataForDoc(docId || null);
-    // Clear the store docId after reading it
-    if (readerDocId) setReaderDocId(null);
   }, [docId, loadDataForDoc]);
+
+  // Handle navigation from EvidenceDrawer - load specific doc once
+  useEffect(() => {
+    if (readerDocId) {
+      loadDataForDoc(readerDocId);
+      setReaderDocId(null);
+    }
+  }, [readerDocId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
