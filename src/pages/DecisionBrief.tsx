@@ -50,6 +50,10 @@ export function DecisionBrief() {
 
   useEffect(() => {
     loadData();
+    // Refresh doc list when page becomes visible (user may have uploaded docs in another tab)
+    const onFocus = () => loadData();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
   }, []);
 
   const loadData = async () => {
@@ -219,7 +223,10 @@ export function DecisionBrief() {
                     </label>
                   ))}
                   {documents.length === 0 && (
-                    <p className="text-xs text-muted-foreground p-2">暂无可用文档</p>
+                    <div className="p-2 space-y-2">
+                      <p className="text-xs text-muted-foreground">暂无可用文档</p>
+                      <button onClick={loadData} className="text-xs text-primary hover:underline">点击刷新</button>
+                    </div>
                   )}
                 </div>
               </div>
