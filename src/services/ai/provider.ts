@@ -14,6 +14,10 @@ export function createAIProvider(): AIProvider {
   const baseUrlMap: Record<string, string> = {
     openai: "https://api.openai.com/v1",
     deepseek: "https://api.deepseek.com/v1",
+    groq: "https://api.groq.com/openai/v1",
+    gemini: "https://generativelanguage.googleapis.com/v1beta/openai",
+    mistral: "https://api.mistral.ai/v1",
+    together: "https://api.together.xyz/v1",
     qwen: "https://dashscope.aliyuncs.com/compatible-mode/v1",
     glm: "https://open.bigmodel.cn/api/paas/v4",
     moonshot: "https://api.moonshot.cn/v1",
@@ -24,6 +28,10 @@ export function createAIProvider(): AIProvider {
   const defaultModelMap: Record<string, string> = {
     openai: "gpt-4o",
     deepseek: "deepseek-v4-pro",
+    groq: "llama-3.3-70b-versatile",
+    gemini: "gemini-2.0-flash",
+    mistral: "mistral-large-latest",
+    together: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
     qwen: "qwen-plus",
     glm: "glm-4-plus",
     moonshot: "moonshot-v1-8k",

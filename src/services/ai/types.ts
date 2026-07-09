@@ -33,12 +33,16 @@ export interface AIProviderConfig {
 }
 
 export const AI_PROVIDER_CONFIGS: AIProviderConfig[] = [
-  { id: "mock", name: "模拟演示（无需 Key）", type: "mock", needsKey: false, needsBaseUrl: false },
+  { id: "mock", name: "模拟演示", type: "mock", needsKey: false, needsBaseUrl: false },
   { id: "deepseek", name: "DeepSeek", type: "deepseek", needsKey: true, needsBaseUrl: false },
   { id: "openai", name: "OpenAI", type: "openai", needsKey: true, needsBaseUrl: false },
-  { id: "qwen", name: "通义千问（阿里）", type: "qwen", needsKey: true, needsBaseUrl: false },
+  { id: "groq", name: "Groq", type: "groq", needsKey: true, needsBaseUrl: false },
+  { id: "gemini", name: "Google Gemini", type: "gemini", needsKey: true, needsBaseUrl: false },
+  { id: "mistral", name: "Mistral AI", type: "mistral", needsKey: true, needsBaseUrl: false },
+  { id: "together", name: "Together AI", type: "together", needsKey: true, needsBaseUrl: false },
+  { id: "qwen", name: "通义千问", type: "qwen", needsKey: true, needsBaseUrl: false },
   { id: "glm", name: "智谱 GLM", type: "glm", needsKey: true, needsBaseUrl: false },
   { id: "moonshot", name: "月之暗面 Kimi", type: "moonshot", needsKey: true, needsBaseUrl: false },
-  { id: "siliconflow", name: "硅基流动 SiliconFlow", type: "siliconflow", needsKey: true, needsBaseUrl: false },
+  { id: "siliconflow", name: "硅基流动", type: "siliconflow", needsKey: true, needsBaseUrl: false },
   { id: "custom", name: "自定义接口", type: "custom", needsKey: true, needsBaseUrl: true },
 ];

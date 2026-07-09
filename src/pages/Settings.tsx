@@ -57,10 +57,14 @@ const AI_PROVIDERS = [
   { value: "mock", label: "模拟演示（无需 Key）" },
   { value: "deepseek", label: "DeepSeek（推荐）" },
   { value: "openai", label: "OpenAI" },
+  { value: "groq", label: "Groq（免费额度）" },
+  { value: "gemini", label: "Google Gemini" },
+  { value: "mistral", label: "Mistral AI" },
+  { value: "together", label: "Together AI" },
   { value: "qwen", label: "通义千问（阿里）" },
   { value: "glm", label: "智谱 GLM" },
   { value: "moonshot", label: "月之暗面 Kimi" },
-  { value: "siliconflow", label: "硅基流动 SiliconFlow" },
+  { value: "siliconflow", label: "硅基流动" },
   { value: "custom", label: "自定义接口" },
 ] as const;
 
