@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, FileText, MapPin, Link2, Loader2 } from "lucide-react";
+import { X, FileText, MapPin, Link2, Loader2, ExternalLink } from "lucide-react";
 import { useAppStore } from "@/stores/app-store";
 import { db } from "@/db/database";
 import { getRelationLabel, getRelationColor } from "@/services/citation/citation-mapper";
@@ -10,6 +11,7 @@ export function EvidenceDrawer() {
   const { evidenceDrawerOpen, closeEvidenceDrawer, evidenceDrawerData } = useAppStore();
   const [evidences, setEvidences] = useState<Evidence[]>([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (evidenceDrawerOpen && evidenceDrawerData) {
@@ -69,7 +71,8 @@ export function EvidenceDrawer() {
                 </div>
               ) : evidences.length > 0 ? (
                 evidences.map((evi) => (
-                  <div key={evi.id} className="p-4 rounded-lg border border-border bg-background hover:border-primary/30 transition-colors">
+                  <div key={evi.id} className="p-4 rounded-lg border border-border bg-background hover:border-primary/30 transition-colors cursor-pointer"
+                    onClick={() => { closeEvidenceDrawer(); navigate(`/reader?doc=${evi.documentId}`); }}>
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="flex items-center gap-2 min-w-0">
                         <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -81,22 +84,28 @@ export function EvidenceDrawer() {
                     </div>
 
                     <blockquote className="text-sm text-muted-foreground border-l-2 border-primary/30 pl-3 py-1 mb-3 italic">
-                      "{evi.text}"
+                      "{evi.text.slice(0, 300)}{evi.text.length > 300 ? '...' : ''}"
                     </blockquote>
 
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      {evi.pageNumber && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          第 {evi.pageNumber} 页
-                        </span>
-                      )}
-                      {evi.sectionTitle && (
-                        <span className="flex items-center gap-1">
-                          <Link2 className="w-3 h-3" />
-                          {evi.sectionTitle}
-                        </span>
-                      )}
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <div className="flex items-center gap-3">
+                        {evi.pageNumber && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            第 {evi.pageNumber} 页
+                          </span>
+                        )}
+                        {evi.sectionTitle && (
+                          <span className="flex items-center gap-1">
+                            <Link2 className="w-3 h-3" />
+                            {evi.sectionTitle}
+                          </span>
+                        )}
+                      </div>
+                      <span className="flex items-center gap-1 text-primary font-medium">
+                        <ExternalLink className="w-3 h-3" />
+                        在阅读器中打开
+                      </span>
                     </div>
                   </div>
                 ))
