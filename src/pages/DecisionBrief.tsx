@@ -71,7 +71,7 @@ export function DecisionBrief() {
     }
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!formData.title.trim()) {
       setError("请输入简报标题。");
       return;
@@ -84,32 +84,29 @@ export function DecisionBrief() {
     setGenerating(true);
     setError(null);
 
-    // Fire and forget - user can navigate away while generating
-    const selectedDocs = documents.filter((d) => formData.documentIds.includes(d.id));
-    (async () => {
-      try {
-        const chunks: DocumentChunk[] = [];
-        for (const docId of formData.documentIds) {
-          const chs = await db.chunks.where("documentId").equals(docId).toArray();
-          chunks.push(...chs);
-        }
-
-        const provider = getAIProvider();
-        const brief = await provider.generateDecisionBrief(
-          { projectId: generateId(), title: formData.title, target: formData.target, audience: formData.audience, detail: formData.detail },
-          selectedDocs,
-          chunks
-        );
-
-        await db.briefs.put(brief);
-        setBriefs((prev) => [brief, ...prev]);
-        setActiveBrief(brief);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "生成简报失败");
-      } finally {
-        setGenerating(false);
+    try {
+      const selectedDocs = documents.filter((d) => formData.documentIds.includes(d.id));
+      const chunks: DocumentChunk[] = [];
+      for (const docId of formData.documentIds) {
+        const chs = await db.chunks.where("documentId").equals(docId).toArray();
+        chunks.push(...chs);
       }
-    })();
+
+      const provider = getAIProvider();
+      const brief = await provider.generateDecisionBrief(
+        { projectId: generateId(), title: formData.title, target: formData.target, audience: formData.audience, detail: formData.detail },
+        selectedDocs,
+        chunks
+      );
+
+      await db.briefs.put(brief);
+      setBriefs((prev) => [brief, ...prev]);
+      setActiveBrief(brief);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "生成简报失败");
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const toggleSection = (sectionId: string) => {

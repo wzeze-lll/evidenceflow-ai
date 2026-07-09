@@ -174,7 +174,7 @@ export class OpenAICompatibleProvider implements AIProvider {
           },
           {
             role: "user",
-            content: `Document: ${document.fileName}\n\nContent:\n${ctx}\n\nPlease provide a ${mode} summary.`,
+            content: `文档：${document.fileName}\n\n内容：\n${ctx}\n\n请提供一份${mode}摘要。`,
           },
         ],
         temperature: 0.3,
@@ -212,7 +212,7 @@ export class OpenAICompatibleProvider implements AIProvider {
             role: "system",
             content: "你是一个文档分析师。比较多份文档，找出相似之处、差异、共同主题和独特观点。",
           },
-          { role: "user", content: `Compare these documents:\n\n${ctx}` },
+          { role: "user", content: `请比较多份文档：\n\n${ctx}` },
         ],
         temperature: 0.3,
         max_tokens: 4096,
@@ -359,27 +359,27 @@ export class OpenAICompatibleProvider implements AIProvider {
         messages: [
           {
             role: "system",
-            content: `You are a document consensus analyzer. Identify topics where multiple documents agree.
+            content: `你是文档共识分析器。找出多份文档之间达成共识的主题。
 
-Return a valid JSON array:
+返回 JSON 数组：
 [
   {
-    "topic": "Topic name",
+    "topic": "共识主题（中文）",
     "level": "strong" | "moderate" | "weak" | "contested",
-    "description": "Description of the consensus",
+    "description": "共识描述（中文）",
     "supportingDocuments": [
-      {"documentRef": "Chunk ref", "excerpt": "Supporting quote"}
+      {"documentRef": "文档引用", "excerpt": "支持原文"}
     ],
     "opposingDocuments": [],
     "coveragePercentage": 75
   }
 ]
 
-Return only the JSON array. Focus on meaningful agreements across documents.`,
+只返回 JSON 数组。所有内容用中文。`,
           },
           {
             role: "user",
-            content: `Analyze these document chunks for consensus:\n\n${ctx}\n\nReturn consensus topics as a JSON array.`,
+            content: `分析以下文档片段的共识：\n\n${ctx}\n\n返回 JSON 数组。`,
           },
         ],
         temperature: 0.2,
@@ -451,28 +451,28 @@ Return only the JSON array. Focus on meaningful agreements across documents.`,
         messages: [
           {
             role: "system",
-            content: `You are a decision brief generator. Create a structured decision brief from document analysis.
+            content: `你是决策简报生成器。根据文档分析生成结构化中文决策简报。
 
-Return a valid JSON object:
+返回 JSON 对象：
 {
   "sections": [
-    {"title": "I. Problem Definition", "content": "...", "order": 1},
-    {"title": "II. Key Facts", "content": "...", "order": 2},
-    {"title": "III. Consensus", "content": "...", "order": 3},
-    {"title": "IV. Conflicts", "content": "...", "order": 4},
-    {"title": "V. Option Comparison", "content": "...", "order": 5},
-    {"title": "VI. Risks", "content": "...", "order": 6},
-    {"title": "VII. Information Gaps", "content": "...", "order": 7},
-    {"title": "VIII. Recommendation", "content": "...", "order": 8},
-    {"title": "IX. Next Steps", "content": "...", "order": 9}
+    {"title": "一、问题定义", "content": "...", "order": 1},
+    {"title": "二、关键事实", "content": "...", "order": 2},
+    {"title": "三、主要共识", "content": "...", "order": 3},
+    {"title": "四、核心争议", "content": "...", "order": 4},
+    {"title": "五、方案比较", "content": "...", "order": 5},
+    {"title": "六、风险评估", "content": "...", "order": 6},
+    {"title": "七、信息缺口", "content": "...", "order": 7},
+    {"title": "八、建议方案", "content": "...", "order": 8},
+    {"title": "九、下一步行动", "content": "...", "order": 9}
   ]
 }
 
-Write in Chinese if the source documents are in Chinese. Each section should be substantive (50-200 words). Reference source chunks by number.`,
+所有内容必须用中文写。每节 50-200 字。引用来源时标注 [Chunk N]。`,
           },
           {
             role: "user",
-            content: `Generate a decision brief titled "${params.title}" for ${params.target} audience (${params.detail} detail).\n\nDocuments:\n${ctx}`,
+            content: `请生成决策简报，标题："${params.title}"。\n\n文档内容：\n${ctx}`,
           },
         ],
         temperature: 0.3,
