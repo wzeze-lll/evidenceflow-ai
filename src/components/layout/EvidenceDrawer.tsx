@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, FileText, MapPin, Link2, Loader2, ExternalLink } from "lucide-react";
 import { useAppStore } from "@/stores/app-store";
@@ -12,7 +11,6 @@ export function EvidenceDrawer() {
   const [evidences, setEvidences] = useState<Evidence[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (evidenceDrawerOpen && evidenceDrawerData) {
@@ -113,8 +111,8 @@ export function EvidenceDrawer() {
 
                     {expandedId === evi.id && (
                       <button
-                        onClick={(e) => { e.stopPropagation(); closeEvidenceDrawer(); navigate(`/reader?doc=${evi.documentId}`); }}
-                        className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-primary/10 text-primary text-xs hover:bg-primary/20 transition-colors"
+                        onClick={(e) => { e.stopPropagation(); closeEvidenceDrawer(); window.location.hash = `/reader?doc=${evi.documentId}`; }}
+                        className="mt-3 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs hover:opacity-90 transition-colors"
                       >
                         <ExternalLink className="w-3 h-3" />
                         在阅读器中打开此文档
