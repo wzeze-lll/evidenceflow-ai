@@ -37,17 +37,16 @@ export function DecisionBrief() {
     documentIds: [] as string[],
   });
 
-  // Auto-generate title from selected document names
+  // Auto-generate title from selected documents (only if title is empty)
   useEffect(() => {
-    if (formData.documentIds.length > 0) {
+    if (formData.documentIds.length > 0 && !formData.title.trim()) {
       const names = documents
         .filter(d => formData.documentIds.includes(d.id))
         .map(d => d.fileName.replace(/\.(pdf|docx|doc|txt|md|markdown)$/i, ""))
         .slice(0, 3);
-      const autoTitle = names.join("、") + " 分析简报";
-      setFormData(p => ({ ...p, title: autoTitle }));
+      setFormData(p => ({ ...p, title: names.join("、") + " 分析简报" }));
     }
-  }, [formData.documentIds]);
+  }, [formData.documentIds, documents]);
 
   useEffect(() => {
     loadData();
