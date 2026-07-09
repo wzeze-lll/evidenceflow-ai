@@ -218,7 +218,7 @@ export function EvidenceChain() {
             前往 AI 阅读
           </Link>
           <Link
-            to="/dashboard"
+            to="/"
             className="px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted"
           >
             返回工作台
@@ -236,7 +236,7 @@ export function EvidenceChain() {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <Link
-              to="/dashboard"
+              to="/"
               className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />

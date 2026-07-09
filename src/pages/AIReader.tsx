@@ -36,6 +36,7 @@ export function AIReader() {
   const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const loadingRef = useRef(false);
   const { openEvidenceDrawer } = useAppStore();
 
   // Load data for a specific document (or all documents if null).
@@ -105,7 +106,8 @@ export function AIReader() {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!input.trim() || loading) return;
+    if (!input.trim() || loadingRef.current) return;
+    loadingRef.current = true;
     const userMsg: AIMessage = {
       id: `msg-${Date.now()}`,
       role: "user",
@@ -225,6 +227,7 @@ export function AIReader() {
       setConversation(conv);
     }
     setLoading(false);
+    loadingRef.current = false;
   };
 
   const handleCopy = async (text: string, id: string) => {
@@ -252,7 +255,7 @@ export function AIReader() {
       a.download = doc.fileName;
       a.click();
       URL.revokeObjectURL(url);
-    });
+    }).catch(() => {});
   };
 
   return (

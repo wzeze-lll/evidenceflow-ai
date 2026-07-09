@@ -170,7 +170,7 @@ export class OpenAICompatibleProvider implements AIProvider {
         messages: [
           {
             role: "system",
-            content: `You are a document analyst. Provide a ${mode} summary of the document. Include key points, important data, and suggested actions. Reference source chunks by their numbers in brackets like [1], [2].`,
+            content: `你是一个文档分析师。请提供一份${mode}摘要，包括关键要点、重要数据和建议行动。用方括号中的编号引用来源片段，如 [1]、[2]。`,
           },
           {
             role: "user",
@@ -210,7 +210,7 @@ export class OpenAICompatibleProvider implements AIProvider {
         messages: [
           {
             role: "system",
-            content: "You are a document analyst. Compare multiple documents and identify similarities, differences, common themes, and unique perspectives.",
+            content: "你是一个文档分析师。比较多份文档，找出相似之处、差异、共同主题和独特观点。",
           },
           { role: "user", content: `Compare these documents:\n\n${ctx}` },
         ],
@@ -528,17 +528,16 @@ Write in Chinese if the source documents are in Chinese. Each section should be 
   }
 
   private buildSystemPrompt(context?: { chunks: DocumentChunk[]; documents: Document[] }): string {
-    let prompt = `You are an intelligent document analysis assistant for EvidenceFlow AI.
-Your purpose is to help users understand and analyze their documents.
+    let prompt = `你是一个智能文档分析助手。你的任务是基于提供的文档内容回答用户问题。
 
-Core principles:
-1. Always cite specific source chunks when making claims. Reference chunks by their [Chunk N] identifier.
-2. Be honest about what the documents do and don't say.
-3. When multiple documents disagree, point out the disagreement rather than picking sides arbitrarily.
-4. Distinguish between facts from documents and your own analysis/opinion.
-5. When information is missing, tell the user what's missing.
+核心原则：
+1. 回答问题时必须引用具体的来源片段，标明 [Chunk N]。
+2. 诚实说明文档中有什么、没有什么。
+3. 当多份文档存在分歧时，客观指出分歧，不要随意站队。
+4. 区分文档事实和你的分析推断。
+5. 信息缺失时要明确告知用户。
 
-Language: Respond in the same language as the user's question. For Chinese documents, respond in Chinese.
+用中文回答。
 
 `;
 

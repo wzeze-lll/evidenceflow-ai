@@ -42,10 +42,10 @@ export function resolveCitations(
 
 export function getRelationLabel(relation: string): string {
   const labels: Record<string, string> = {
-    support: "Supports",
-    contradict: "Contradicts",
-    complement: "Complements",
-    uncertain: "Uncertain",
+    support: "支持",
+    contradict: "反对",
+    complement: "补充",
+    uncertain: "不确定",
   };
   return labels[relation] || relation;
 }

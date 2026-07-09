@@ -17,6 +17,7 @@ import {
   ListChecks,
 } from "lucide-react";
 import { db } from "@/db/database";
+import { getAIProvider } from "@/services/ai/provider";
 import type { Document, ConflictItem, ConflictLevel, ConflictType } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -430,8 +431,19 @@ export function ConflictRadar() {
       );
 
       if (matched.length === 0) {
-        setConflicts([]);
-        setPhase("no-results");
+        // No cached conflicts - run AI detection
+        const provider = getAIProvider();
+        const chunks = await db.chunks.where("documentId").anyOf(Array.from(selectedDocIds)).toArray();
+        const docs = await db.documents.bulkGet(Array.from(selectedDocIds));
+        const detected = await provider.detectConflicts(Array.from(selectedDocIds), docs.filter(Boolean) as Document[], chunks);
+        await db.conflicts.bulkPut(detected);
+        if (detected.length === 0) {
+          setConflicts([]);
+          setPhase("no-results");
+        } else {
+          setConflicts(detected);
+          setPhase("results");
+        }
       } else {
         setConflicts(matched);
         setPhase("results");
