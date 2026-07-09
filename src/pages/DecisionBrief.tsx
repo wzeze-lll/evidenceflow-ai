@@ -37,6 +37,18 @@ export function DecisionBrief() {
     documentIds: [] as string[],
   });
 
+  // Auto-generate title from selected document names
+  useEffect(() => {
+    if (formData.documentIds.length > 0) {
+      const names = documents
+        .filter(d => formData.documentIds.includes(d.id))
+        .map(d => d.fileName.replace(/\.(pdf|docx|doc|txt|md|markdown)$/i, ""))
+        .slice(0, 3);
+      const autoTitle = names.join("、") + " 分析简报";
+      setFormData(p => ({ ...p, title: autoTitle }));
+    }
+  }, [formData.documentIds]);
+
   useEffect(() => {
     loadData();
   }, []);
