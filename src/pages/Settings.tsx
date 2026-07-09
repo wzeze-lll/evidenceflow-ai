@@ -77,6 +77,28 @@ const AI_PROVIDERS = [
   { value: "custom", label: "自定义接口（填地址即可）" },
 ] as const;
 
+const PROVIDER_URLS: Record<string, string> = {
+  deepseek: "platform.deepseek.com",
+  openai: "platform.openai.com/api-keys",
+  claude: "console.anthropic.com",
+  gemini: "aistudio.google.com/apikey",
+  groq: "console.groq.com/keys",
+  mistral: "console.mistral.ai/api-keys",
+  together: "api.together.xyz/settings/api-keys",
+  openrouter: "openrouter.ai/keys",
+  siliconflow: "cloud.siliconflow.cn/account/ak",
+  qwen: "bailian.console.aliyun.com",
+  glm: "open.bigmodel.cn/usercenter/apikeys",
+  moonshot: "platform.moonshot.cn/console/api-keys",
+  doubao: "console.volcengine.com/ark",
+  minimax: "platform.minimax.chat",
+  stepfun: "platform.stepfun.com",
+  modelscope: "modelscope.cn",
+  baidu: "console.bce.baidu.com/qianfan",
+  nvidia: "build.nvidia.com",
+  github: "github.com/settings/tokens",
+};
+
 const THEME_OPTIONS = [
   { value: "light", label: "浅色", icon: Sun },
   { value: "dark", label: "深色", icon: Moon },
@@ -302,6 +324,14 @@ export function Settings() {
                   ))}
                 </SelectContent>
               </Select>
+              {settings.aiProvider !== "mock" && settings.aiProvider !== "custom" && (
+                <p className="text-xs text-muted-foreground">
+                  注册获取 Key：
+                  <a href={PROVIDER_URLS[settings.aiProvider]} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline ml-1">
+                    {PROVIDER_URLS[settings.aiProvider]}
+                  </a>
+                </p>
+              )}
             </div>
 
             {/* API Key */}
