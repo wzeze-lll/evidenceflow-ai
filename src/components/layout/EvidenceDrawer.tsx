@@ -33,12 +33,14 @@ export function EvidenceDrawer() {
       }
       setEvidences(evids);
 
-      // Pre-load full chunk content for all evidence
+      // Pre-load full text for each evidence's document (lazy, only on expand)
       const texts: Record<string, string> = {};
+      const loadedDocs = new Set<string>();
       for (const evi of evids) {
-        if (evi.chunkId) {
-          const chunk = await db.chunks.get(evi.chunkId);
-          if (chunk) texts[evi.id] = chunk.content;
+        if (!loadedDocs.has(evi.documentId)) {
+          loadedDocs.add(evi.documentId);
+          const chunks = await db.chunks.where("documentId").equals(evi.documentId).toArray();
+          texts[evi.documentId] = chunks.map(c => c.content).join("\n\n");
         }
       }
       setFullTexts(texts);
@@ -93,9 +95,9 @@ export function EvidenceDrawer() {
                       </div>
                     </div>
 
-                    <blockquote className="text-sm text-muted-foreground border-l-2 border-primary/30 pl-3 py-1 mb-3 italic">
-                      {expandedId === evi.id && fullTexts[evi.id]
-                        ? fullTexts[evi.id]
+                    <blockquote className="text-sm text-muted-foreground border-l-2 border-primary/30 pl-3 py-1 mb-3 italic max-h-60 overflow-y-auto whitespace-pre-wrap">
+                      {expandedId === evi.id && fullTexts[evi.documentId]
+                        ? fullTexts[evi.documentId]
                         : (evi.text.length > 200 ? evi.text.slice(0, 200) + '...' : evi.text)
                       }
                     </blockquote>
