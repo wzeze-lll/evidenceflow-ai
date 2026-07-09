@@ -187,7 +187,7 @@ export function AIReader() {
 
         for (const cite of response.citations) {
           await db.evidences.put({
-            id: generateId(),
+            id: cite.id,
             claimId,
             citationId: cite.id,
             documentId: cite.documentId,
