@@ -57,13 +57,17 @@ export function DecisionBrief() {
   }, []);
 
   const loadData = async () => {
-    const [loadedBriefs, loadedDocs] = await Promise.all([
-      db.briefs.orderBy("createdAt").reverse().toArray(),
-      db.documents.toArray(),
-    ]);
-    setBriefs(loadedBriefs);
-    setDocuments(loadedDocs);
-    if (loadedBriefs.length > 0) setActiveBrief(loadedBriefs[0]);
+    try {
+      const loadedDocs = await db.documents.toArray();
+      setDocuments(loadedDocs);
+      const loadedBriefs = await db.briefs.toArray();
+      loadedBriefs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setBriefs(loadedBriefs);
+      if (loadedBriefs.length > 0) setActiveBrief(loadedBriefs[0]);
+    } catch {
+      setDocuments([]);
+      setBriefs([]);
+    }
   };
 
   const handleGenerate = async () => {
