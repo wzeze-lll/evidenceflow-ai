@@ -3,11 +3,38 @@ import { MockProvider } from "./mock-provider";
 import { OpenAICompatibleProvider } from "./openai-provider";
 import { useSettingsStore } from "@/stores/settings-store";
 
+export const DEFAULT_MODEL_MAP: Record<string, string> = {
+  openai: "gpt-4o",
+  deepseek: "deepseek-v4-pro",
+  claude: "claude-sonnet-4-20250514",
+  gemini: "gemini-2.0-flash",
+  groq: "llama-3.3-70b-versatile",
+  mistral: "mistral-large-latest",
+  together: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+  openrouter: "anthropic/claude-sonnet-4",
+  siliconflow: "deepseek-ai/DeepSeek-V3",
+  qwen: "qwen-plus",
+  glm: "glm-4-plus",
+  moonshot: "moonshot-v1-8k",
+  doubao: "doubao-pro-32k",
+  minimax: "abab6.5s-chat",
+  stepfun: "step-2-16k",
+  modelscope: "qwen/Qwen2.5-72B-Instruct",
+  baidu: "ernie-4.0-8k",
+  nvidia: "meta/llama-3.3-70b-instruct",
+  github: "gpt-4o",
+};
+
 export function createAIProvider(): AIProvider {
   const settings = useSettingsStore.getState().settings;
 
-  // If no API key is set, use Mock provider
+  // If no API key is set, use Mock provider with a clear warning
   if (!settings.aiApiKey || settings.aiProvider === "mock") {
+    if (settings.aiProvider !== "mock") {
+      return new MockProvider(
+        `未配置 ${settings.aiProvider} 的 API 密钥，已自动切换到模拟模式。请在设置中填入 API Key 以使用真实 AI 服务。`
+      );
+    }
     return new MockProvider();
   }
 
@@ -34,28 +61,6 @@ export function createAIProvider(): AIProvider {
     custom: settings.aiBaseUrl || "",
   };
 
-  const defaultModelMap: Record<string, string> = {
-    openai: "gpt-4o",
-    deepseek: "deepseek-v4-pro",
-    claude: "claude-sonnet-4-20250514",
-    gemini: "gemini-2.0-flash",
-    groq: "llama-3.3-70b-versatile",
-    mistral: "mistral-large-latest",
-    together: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
-    openrouter: "anthropic/claude-sonnet-4",
-    siliconflow: "deepseek-ai/DeepSeek-V3",
-    qwen: "qwen-plus",
-    glm: "glm-4-plus",
-    moonshot: "moonshot-v1-8k",
-    doubao: "doubao-pro-32k",
-    minimax: "abab6.5s-chat",
-    stepfun: "step-2-16k",
-    modelscope: "qwen/Qwen2.5-72B-Instruct",
-    baidu: "ernie-4.0-8k",
-    nvidia: "meta/llama-3.3-70b-instruct",
-    github: "gpt-4o",
-  };
-
   const baseUrl = baseUrlMap[settings.aiProvider] || "";
   if (!baseUrl) return new MockProvider();
 
@@ -63,7 +68,7 @@ export function createAIProvider(): AIProvider {
     {
       apiKey: settings.aiApiKey,
       baseUrl,
-      model: settings.aiModel || defaultModelMap[settings.aiProvider] || "gpt-4o",
+      model: settings.aiModel || DEFAULT_MODEL_MAP[settings.aiProvider] || "gpt-4o",
     },
     settings.aiProvider,
     settings.aiProvider

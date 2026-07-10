@@ -22,6 +22,8 @@ export function Dashboard() {
   const [conflictCount, setConflictCount] = useState(0);
   const [consensusCount, setConsensusCount] = useState(0);
   const [briefCount, setBriefCount] = useState(0);
+  const [docCount, setDocCount] = useState(0);
+  const [lowEvidenceCount, setLowEvidenceCount] = useState(0);
 
   useEffect(() => {
     loadDashboard();
@@ -33,10 +35,14 @@ export function Dashboard() {
         db.conflicts.count(),
         db.consensusTopics.count(),
         db.briefs.count(),
-      ]).then(([conflicts, consensus, briefs]) => {
+        db.documents.count(),
+        db.claims.filter((c) => c.evidenceCount <= 1).count(),
+      ]).then(([conflicts, consensus, briefs, docs, lowEvidence]) => {
         setConflictCount(conflicts);
         setConsensusCount(consensus);
         setBriefCount(briefs);
+        setDocCount(docs);
+        setLowEvidenceCount(lowEvidence);
       });
     }
   }, [loaded]);
@@ -72,7 +78,7 @@ export function Dashboard() {
             上传文档
           </Link>
           <Link
-            to="/welcome"
+            to="/"
             className="px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted"
           >
             查看欢迎页面
@@ -86,27 +92,33 @@ export function Dashboard() {
   const workspace = workspaces[0];
   const insights = [];
   if (workspace) {
-    insights.push({
-      icon: AlertTriangle,
-      title: "3 个需要重点确认的观点冲突",
-      description: "开发周期、技术架构和预算估算在不同方案中存在差异",
-      color: "text-amber-600 dark:text-amber-400",
-      to: "/conflicts",
-    });
-    insights.push({
-      icon: GitCompare,
-      title: "5 个跨文档共识主题",
-      description: "隐私保护、AI溯源、前端框架等方面形成共识",
-      color: "text-emerald-600 dark:text-emerald-400",
-      to: "/consensus",
-    });
-    insights.push({
-      icon: TrendingUp,
-      title: "2 个重要结论缺少第二来源支持",
-      description: "建议补充更多资料来验证关键结论",
-      color: "text-purple-600 dark:text-purple-400",
-      to: "/evidence",
-    });
+    if (conflictCount > 0) {
+      insights.push({
+        icon: AlertTriangle,
+        title: `${conflictCount} 个需要重点确认的观点冲突`,
+        description: "开发周期、技术架构和预算估算在不同方案中存在差异",
+        color: "text-amber-600 dark:text-amber-400",
+        to: "/conflicts",
+      });
+    }
+    if (consensusCount > 0) {
+      insights.push({
+        icon: GitCompare,
+        title: `${consensusCount} 个跨文档共识主题`,
+        description: "隐私保护、AI溯源、前端框架等方面形成共识",
+        color: "text-emerald-600 dark:text-emerald-400",
+        to: "/consensus",
+      });
+    }
+    if (lowEvidenceCount > 0) {
+      insights.push({
+        icon: TrendingUp,
+        title: `${lowEvidenceCount} 个重要结论缺少第二来源支持`,
+        description: "建议补充更多资料来验证关键结论",
+        color: "text-purple-600 dark:text-purple-400",
+        to: "/evidence",
+      });
+    }
   }
 
   return (
@@ -117,7 +129,7 @@ export function Dashboard() {
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
-            { label: "文档", value: recentDocuments.length, icon: FolderOpen },
+            { label: "文档数量", value: docCount, icon: FolderOpen },
             { label: "已发现冲突", value: conflictCount, icon: AlertTriangle },
             { label: "共识主题", value: consensusCount, icon: GitCompare },
             { label: "决策简报", value: briefCount, icon: FileText },

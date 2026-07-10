@@ -3,6 +3,8 @@ import type { Citation, ConflictItem, ConsensusTopic, DecisionBrief, Document, D
 export interface AIProvider {
   readonly name: string;
   readonly id: string;
+  /** Set when the provider is a fallback (e.g. Mock due to missing API key) */
+  readonly warningMessage?: string;
   testConnection(): Promise<{ ok: boolean; message: string; latencyMs: number }>;
   chat(
     messages: { role: string; content: string }[],

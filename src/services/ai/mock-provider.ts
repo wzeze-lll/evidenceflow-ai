@@ -28,6 +28,11 @@ function makeCitations(chunks: DocumentChunk[], documents: Document[], count: nu
 export class MockProvider implements AIProvider {
   readonly name = "Mock Demo Provider";
   readonly id = "mock";
+  readonly warningMessage?: string;
+
+  constructor(warningMessage?: string) {
+    this.warningMessage = warningMessage;
+  }
 
   async testConnection(): Promise<{ ok: boolean; message: string; latencyMs: number }> {
     await new Promise((r) => setTimeout(r, 300 + Math.random() * 400));

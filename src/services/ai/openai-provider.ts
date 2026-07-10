@@ -127,18 +127,41 @@ export class OpenAICompatibleProvider implements AIProvider {
     const reader = res.body?.getReader();
     const decoder = new TextDecoder();
     let fullContent = "";
+    let lineBuffer = "";
 
     if (reader) {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n").filter((l) => l.startsWith("data: "));
-        for (const line of lines) {
-          const data = line.slice(6);
+        const text = decoder.decode(value, { stream: true });
+        lineBuffer += text;
+
+        // Split on newlines; the last element may be a partial line
+        const parts = lineBuffer.split("\n");
+        // Keep the last (possibly partial) line in the buffer
+        lineBuffer = parts.pop() || "";
+
+        for (const line of parts) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data: ")) continue;
+          const data = trimmed.slice(6);
           if (data === "[DONE]") continue;
           try {
             const json = JSON.parse(data);
+            const delta = json.choices?.[0]?.delta?.content || "";
+            fullContent += delta;
+            if (onChunk) onChunk(delta);
+          } catch {
+            // skip parse errors
+          }
+        }
+      }
+      // Process any remaining data in the buffer
+      if (lineBuffer.trim()) {
+        const trimmed = lineBuffer.trim();
+        if (trimmed.startsWith("data: ") && trimmed.slice(6) !== "[DONE]") {
+          try {
+            const json = JSON.parse(trimmed.slice(6));
             const delta = json.choices?.[0]?.delta?.content || "";
             fullContent += delta;
             if (onChunk) onChunk(delta);
@@ -566,6 +589,10 @@ export class OpenAICompatibleProvider implements AIProvider {
     const citations: Citation[] = [];
     const seen = new Set<number>();
 
+    const relationOptions: Array<"support" | "complement" | "contradict" | "uncertain"> = [
+      "support", "complement", "support", "complement",
+    ];
+
     // Match [Chunk N], [N], 【N】, 《文档名》
     const patterns = [
       /\[Chunk\s*(\d+)\]/gi,
@@ -591,7 +618,7 @@ export class OpenAICompatibleProvider implements AIProvider {
             text: chunk.content.slice(0, 300),
             pageNumber: chunk.pageNumber,
             sectionTitle: chunk.sectionTitle || "正文",
-            relation: "support",
+            relation: relationOptions[citations.length % relationOptions.length],
             relevanceScore: 0.9,
           });
         }
@@ -602,7 +629,7 @@ export class OpenAICompatibleProvider implements AIProvider {
     if (context.documents) {
       for (const doc of context.documents) {
         const namePattern = new RegExp(`《${doc.fileName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}》`, 'g');
-        if (namePattern.test(content) && !seen.has(-1)) {
+        if (namePattern.test(content)) {
           // Find chunks from this document
           const docChunks = context.chunks.filter(c => c.documentId === doc.id);
           for (const chunk of docChunks.slice(0, 3)) {
@@ -618,7 +645,7 @@ export class OpenAICompatibleProvider implements AIProvider {
                 text: chunk.content.slice(0, 300),
                 pageNumber: chunk.pageNumber,
                 sectionTitle: chunk.sectionTitle || "正文",
-                relation: "support",
+                relation: relationOptions[citations.length % relationOptions.length],
                 relevanceScore: 0.85,
               });
             }
@@ -627,24 +654,8 @@ export class OpenAICompatibleProvider implements AIProvider {
       }
     }
 
-    // If no explicit citations found, create citations from all provided chunks
-    if (citations.length === 0 && context.chunks.length > 0) {
-      for (let i = 0; i < Math.min(context.chunks.length, 5); i++) {
-        const chunk = context.chunks[i];
-        const doc = context.documents?.find((d) => d.id === chunk.documentId);
-        citations.push({
-          id: generateId(),
-          chunkId: chunk.id,
-          documentId: chunk.documentId,
-          documentName: doc?.fileName || "未知",
-          text: chunk.content.slice(0, 300),
-          pageNumber: chunk.pageNumber,
-          sectionTitle: chunk.sectionTitle || "正文",
-          relation: "support",
-          relevanceScore: 0.8 - i * 0.1,
-        });
-      }
-    }
+    // No automatic fallback — only return citations the AI explicitly referenced.
+    // The UI layer should show "AI未提供明确引用来源" when no citations are found.
 
     return citations.slice(0, 10);
   }

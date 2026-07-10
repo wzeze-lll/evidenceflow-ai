@@ -103,24 +103,25 @@ export function DocumentLibrary() {
 
         const { document, chunks } = await parseFile(file);
 
-        // Ensure there's a workspace - create one if needed
+        // Ensure there's a non-demo workspace — create one if needed
         let workspaces = await db.workspaces.toArray();
-        if (workspaces.length === 0) {
-          const defaultWs = {
+        const nonDemoWs = workspaces.filter(w => !w.isDemo);
+        let targetWs = nonDemoWs[0];
+        if (!targetWs) {
+          targetWs = {
             id: `ws-${Date.now()}`,
-            name: "我的工作区",
+            name: "默认工作区",
             description: "默认工作区",
             documentIds: [] as string[],
             isDemo: false,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           };
-          await db.workspaces.put(defaultWs);
-          workspaces = [defaultWs];
+          await db.workspaces.put(targetWs);
         }
-        document.workspaceId = workspaces[0].id;
-        await db.workspaces.update(workspaces[0].id, {
-          documentIds: [...workspaces[0].documentIds, document.id],
+        document.workspaceId = targetWs.id;
+        await db.workspaces.update(targetWs.id, {
+          documentIds: [...targetWs.documentIds, document.id],
         });
 
         await db.documents.delete(pendingId);
@@ -140,7 +141,6 @@ export function DocumentLibrary() {
         setDocuments((prev) => prev.map((d) => (d.id === pendingId ? document : d)));
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        console.error(`[Upload] 解析失败 (${file.name}):`, msg);
         setUploadError(`解析失败 ${file.name}: ${msg}`);
         setDocuments((prev) => prev.filter((d) => d.id !== pendingId));
         try { await db.documents.delete(pendingId); } catch {}
@@ -158,6 +158,10 @@ export function DocumentLibrary() {
   };
 
   const handleDelete = async (docId: string) => {
+    const doc = documents.find(d => d.id === docId);
+    if (!doc) return;
+    if (!window.confirm(`确认删除文档 "${doc.fileName}"？\n\n此操作将同时删除相关的对话记录、证据和文本块，且不可撤销。`)) return;
+
     // Delete conversations for this document
     const convs = await db.conversations.where("documentId").equals(docId).toArray();
     for (const conv of convs) {
@@ -194,7 +198,7 @@ export function DocumentLibrary() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = doc.fileName;
+    a.download = doc.fileName.replace(/\.[^.]+$/, "") + ".txt";
     a.click();
     URL.revokeObjectURL(url);
   };

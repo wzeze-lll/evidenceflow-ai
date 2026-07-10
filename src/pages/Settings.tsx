@@ -175,36 +175,25 @@ export function Settings() {
     setTestStatus("testing");
     setTestMessage("");
 
-    // Simulate a connection test with artificial delay
     try {
-      await new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (!settings.aiApiKey && settings.aiProvider !== "mock") {
-            reject(new Error("此服务需要 API Key。"));
-            return;
-          }
-          if (settings.aiProvider === "mock") {
-            resolve(true);
-            return;
-          }
-          // Simulate a successful test
-          resolve(true);
-        }, 1500);
-      });
+      const { getAIProvider } = await import("@/services/ai/provider");
+      const provider = getAIProvider();
+      const result = await provider.testConnection();
 
-      setTestStatus("success");
-      setTestMessage(
-        settings.aiProvider === "mock"
-          ? "模拟服务始终可用。"
-          : `成功连接到 ${settings.aiProvider}。`,
-      );
+      if (result.ok) {
+        setTestStatus("success");
+        setTestMessage(result.message);
+      } else {
+        setTestStatus("error");
+        setTestMessage(result.message);
+      }
     } catch (err) {
       setTestStatus("error");
       setTestMessage(
         err instanceof Error ? err.message : "连接测试失败。",
       );
     }
-  }, [settings.aiApiKey, settings.aiProvider]);
+  }, []);
 
   const handleClearAllData = useCallback(async () => {
     try {
@@ -529,7 +518,7 @@ export function Settings() {
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   所有文档在浏览器本地解析和分析。
                   除非你明确将其发送到远程 AI 服务，否则文件不会离开你的设备。
-                  
+
                 </p>
                 <Badge variant="success" className="mt-2 text-[10px]">
                   已激活
@@ -544,7 +533,7 @@ export function Settings() {
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   使用远程 AI 服务时，仅发送匿名化的文本摘录。
                   完整的文档和个人数据不会被传输。
-                  
+
                 </p>
                 <Badge variant="warning" className="mt-2 text-[10px]">
                   {settings.aiProvider === "mock" ? "未激活" : "已激活"}

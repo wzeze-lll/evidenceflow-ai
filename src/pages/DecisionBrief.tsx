@@ -267,6 +267,7 @@ export function DecisionBrief() {
                   <button
                     onClick={async (e) => {
                       e.stopPropagation();
+                      if (!window.confirm(`确认删除简报 "${brief.title}"？此操作不可撤销。`)) return;
                       await db.briefs.delete(brief.id);
                       setBriefs(prev => prev.filter(b => b.id !== brief.id));
                       if (activeBrief?.id === brief.id) setActiveBrief(null);

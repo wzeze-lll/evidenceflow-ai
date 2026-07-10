@@ -5,7 +5,7 @@ function getDocumentType(fileName: string): DocumentType {
   const ext = fileName.split(".").pop()?.toLowerCase();
   switch (ext) {
     case "pdf": return "pdf";
-    case "docx": case "doc": return "docx";
+    case "docx": return "docx";
     case "md": case "markdown": return "md";
     default: return "txt";
   }
@@ -61,6 +61,37 @@ function splitIntoSections(text: string): { title: string; content: string; page
   return sections;
 }
 
+/**
+ * Count words in text. For Chinese text (CJK characters), count individual characters.
+ * For English and other scripts, count whitespace-separated words.
+ */
+function countWords(text: string): number {
+  let cjkChars = 0;
+  let wordChars = 0;
+  let inWord = false;
+
+  for (const ch of text) {
+    // CJK Unified Ideographs and common CJK ranges
+    if (/[一-鿿㐀-䶿豈-﫿]/.test(ch)) {
+      cjkChars++;
+      if (inWord) {
+        wordChars++;
+        inWord = false;
+      }
+    } else if (/[\s,.;:!?()\[\]{}"'\n\r\t]/.test(ch)) {
+      if (inWord) {
+        wordChars++;
+        inWord = false;
+      }
+    } else {
+      inWord = true;
+    }
+  }
+  if (inWord) wordChars++;
+
+  return cjkChars + wordChars;
+}
+
 function extractKeywords(text: string): string[] {
   const words = text.toLowerCase().split(/[\s,.;:!?()\[\]{}"'\n\r\t]+/).filter(Boolean);
   const stopWords = new Set([
@@ -91,9 +122,12 @@ async function extractPdfText(file: File): Promise<{
 }> {
   const pdfjsLib = await import("pdfjs-dist");
 
-  // Configure the worker — use CDN for the matching pdfjs-dist version
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+  // Use the locally bundled worker from pdfjs-dist — no CDN dependency.
+  // Vite will resolve and bundle the worker file automatically.
+  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    "pdfjs-dist/build/pdf.worker.min.mjs",
+    import.meta.url
+  ).toString();
 
   const arrayBuffer = await file.arrayBuffer();
   const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
@@ -132,7 +166,7 @@ export async function parseFile(file: File): Promise<{ document: Document; chunk
         throw new Error("无法从文件中提取文本内容。请确认文件不是扫描版或空文件。");
       }
 
-      const words = text.split(/[\s,.;:!?()\[\]{}"'\n\r\t]+/).filter(Boolean);
+      const wordCount = countWords(text);
       const docId = generateId();
       const now = new Date().toISOString();
 
@@ -143,7 +177,7 @@ export async function parseFile(file: File): Promise<{ document: Document; chunk
         fileType,
         fileSize: file.size,
         pageCount: pages.length,
-        wordCount: words.length,
+        wordCount,
         parseStatus: "ready",
         tags: [],
         isFavorite: false,
@@ -216,7 +250,7 @@ export async function parseFile(file: File): Promise<{ document: Document; chunk
     }
 
     const sections = splitIntoSections(text);
-    const words = text.split(/[\s,.;:!?()\[\]{}"'\n\r\t]+/).filter(Boolean);
+    const wordCount = countWords(text);
     const docId = generateId();
     const now = new Date().toISOString();
 
@@ -227,7 +261,7 @@ export async function parseFile(file: File): Promise<{ document: Document; chunk
       fileType,
       fileSize: file.size,
       pageCount: Math.max(1, sections.length),
-      wordCount: words.length,
+      wordCount,
       parseStatus: "ready",
       tags: [],
       isFavorite: false,

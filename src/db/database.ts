@@ -48,6 +48,22 @@ export class EvidenceFlowDB extends Dexie {
       settings: "id",
       activityLogs: "id, timestamp",
     });
+
+    this.version(2).stores({
+      documents: "id, workspaceId, fileType, parseStatus, createdAt, updatedAt, tags",
+      chunks: "id, documentId, position",
+      workspaces: "id, isDemo",
+      projects: "id, workspaceId, status",
+      conversations: "id, documentId, projectId",
+      claims: "id, conversationId, createdAt",
+      evidences: "id, claimId, citationId, documentId",
+      conflicts: "id",
+      consensusTopics: "id",
+      briefs: "id, projectId, createdAt",
+      knowledgeCards: "id, documentId",
+      settings: "id",
+      activityLogs: "id, timestamp",
+    });
   }
 }
 

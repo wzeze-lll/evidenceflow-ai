@@ -237,9 +237,9 @@ export function AIReader() {
   };
 
   const handleDeleteConversation = async () => {
-    if (conversation) {
-      await db.conversations.delete(conversation.id);
-    }
+    if (!conversation) return;
+    if (!window.confirm("确认清除当前对话记录？此操作不可撤销。")) return;
+    await db.conversations.delete(conversation.id);
     setMessages([makeWelcomeMsg()]);
     setConversation(null);
   };
@@ -252,7 +252,7 @@ export function AIReader() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = doc.fileName;
+      a.download = doc.fileName.replace(/\.[^.]+$/, "") + ".txt";
       a.click();
       URL.revokeObjectURL(url);
     }).catch(() => {});
@@ -294,9 +294,24 @@ export function AIReader() {
               </button>
               <button
                 onClick={async () => {
-                  await db.documents.delete(doc.id);
+                  if (!window.confirm(`确认删除文档 "${doc.fileName}"？\n\n此操作将同时删除相关的对话记录、证据和文本块，且不可撤销。`)) return;
+                  const convs = await db.conversations.where("documentId").equals(doc.id).toArray();
+                  for (const conv of convs) {
+                    await db.claims.where("conversationId").equals(conv.id).delete();
+                    await db.conversations.delete(conv.id);
+                  }
                   await db.chunks.where("documentId").equals(doc.id).delete();
-                  await db.conversations.where("documentId").equals(doc.id).delete();
+                  await db.evidences.where("documentId").equals(doc.id).delete();
+                  await db.documents.delete(doc.id);
+                  // Remove from workspace
+                  const workspaces = await db.workspaces.toArray();
+                  for (const ws of workspaces) {
+                    if (ws.documentIds.includes(doc.id)) {
+                      await db.workspaces.update(ws.id, {
+                        documentIds: ws.documentIds.filter(id => id !== doc.id),
+                      });
+                    }
+                  }
                   loadDataForDoc(null);
                 }}
                 className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive shrink-0"
