@@ -233,7 +233,7 @@ export function Settings() {
         briefs: await db.briefs.toArray(),
         knowledgeCards: await db.knowledgeCards.toArray(),
         activityLogs: await db.activityLogs.toArray(),
-        settings: await db.settings.toArray(),
+        settings: (await db.settings.toArray()).map(s => ({ ...s, aiApiKey: s.aiApiKey ? "[已隐藏]" : "" })),
       };
 
       const blob = new Blob([JSON.stringify(data, null, 2)], {

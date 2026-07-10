@@ -573,8 +573,6 @@ export class OpenAICompatibleProvider implements AIProvider {
         if (chunk.pageNumber) prompt += ` 第${chunk.pageNumber}页`;
         if (chunk.sectionTitle) prompt += ` ${chunk.sectionTitle}`;
         prompt += `:\n${chunk.content}\n`;
-        if (chunk.sectionTitle) prompt += ` - ${chunk.sectionTitle}`;
-        prompt += `:\n${chunk.content}\n`;
       }
     }
 

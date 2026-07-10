@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/app-store";
 
 const NAV_ITEMS = [
-  { to: "/", icon: LayoutDashboard, label: "工作台" },
+  { to: "/dashboard", icon: LayoutDashboard, label: "工作台" },
   { to: "/documents", icon: FolderOpen, label: "文档库" },
   { to: "/reader", icon: MessageSquareText, label: "AI 阅读" },
   { to: "/evidence", icon: Link2, label: "证据链" },

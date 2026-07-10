@@ -5,6 +5,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 
 // Eager-loaded pages (always needed)
 import { Dashboard } from "@/pages/Dashboard";
+import { Welcome } from "@/pages/Welcome";
 
 // Lazy-loaded pages for code splitting
 const DocumentLibrary = lazy(() => import("@/pages/DocumentLibrary").then((m) => ({ default: m.DocumentLibrary })));
@@ -31,7 +32,8 @@ function AppRoutes() {
     <Routes>
       {/* App layout with sidebar */}
       <Route element={<AppLayout />}>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<Welcome />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route
           path="/documents"
           element={
