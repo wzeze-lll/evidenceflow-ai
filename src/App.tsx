@@ -7,7 +7,6 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { Dashboard } from "@/pages/Dashboard";
 
 // Lazy-loaded pages for code splitting
-const Welcome = lazy(() => import("@/pages/Welcome").then((m) => ({ default: m.Welcome })));
 const DocumentLibrary = lazy(() => import("@/pages/DocumentLibrary").then((m) => ({ default: m.DocumentLibrary })));
 const AIReader = lazy(() => import("@/pages/AIReader").then((m) => ({ default: m.AIReader })));
 const EvidenceChain = lazy(() => import("@/pages/EvidenceChain").then((m) => ({ default: m.EvidenceChain })));
@@ -32,8 +31,7 @@ function AppRoutes() {
     <Routes>
       {/* App layout with sidebar */}
       <Route element={<AppLayout />}>
-        <Route path="/" element={<Welcome />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/" element={<Dashboard />} />
         <Route
           path="/documents"
           element={
